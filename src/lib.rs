@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+#[derive(Hash, PartialEq, Eq)]
 pub struct Pos {
     row: usize,
     col: usize,
@@ -63,7 +64,9 @@ impl Corpus {
 }
 
 pub trait Layout {
-    fn pos_to_key(&self, p: Pos) -> CorpusChar;
+    fn pos_to_key(&self, p: Pos) -> Option<&CorpusChar>;
+    fn pos_to_key_unchecked(&self, p: Pos) -> CorpusChar;
+    fn swap(&mut self, a: Pos, b: Pos);
 }
 
 pub struct StandardLayout {
@@ -71,17 +74,33 @@ pub struct StandardLayout {
 }
 
 impl Layout for StandardLayout {
-    fn pos_to_key(&self, p: Pos) -> CorpusChar {
-        self.matrix[p.row * 10 + p.col]
+    fn pos_to_key(&self, p: Pos) -> Option<&CorpusChar> {
+        self.matrix.get(p.row * 10 + p.col)
+    }
+    fn pos_to_key_unchecked(&self, p: Pos) -> CorpusChar {
+	self.matrix[p.row * 10 + p.col]
+    }
+    fn swap(&mut self, a: Pos, b: Pos) {
+	self.matrix.swap(a.row*10 + a.col, b.row*10 + b.col);
     }
 }
 
 pub struct FlexibleLayout {
-    pub matrix: Vec<Vec<CorpusChar>>,
+    pub matrix: HashMap<Pos, CorpusChar>,
 }
 
 impl Layout for FlexibleLayout {
-    fn pos_to_key(&self, p: Pos) -> CorpusChar {
-        self.matrix[p.row][p.col]
+    fn pos_to_key(&self, p: Pos) -> Option<&CorpusChar> {
+        self.matrix.get(&p)
+    }
+    fn pos_to_key_unchecked(&self, p: Pos) -> CorpusChar {
+        *self.matrix.get(&p).unwrap()
+    }
+    fn swap(&mut self, a: Pos, b: Pos) {
+	let x = self.matrix.get_mut(&a).unwrap() as *mut CorpusChar;
+	let y = self.matrix.get_mut(&b).unwrap() as *mut CorpusChar;
+	unsafe {
+	    std::ptr::swap(x, y);
+	}
     }
 }
