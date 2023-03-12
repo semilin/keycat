@@ -1,4 +1,6 @@
-use keycat::{Corpus, CorpusChar};
+use keycat::{Corpus};
+use std::fs::File;
+use std::io::{self, BufRead};
 
 pub fn main() {
     let mut corpus = Corpus::with_char_list(
@@ -9,12 +11,15 @@ pub fn main() {
             .as_slice(),
     );
     println!("{:?}", corpus.char_list);
-    corpus.add_str("hello");
-    for (i, v) in corpus.bigrams.iter().enumerate() {
+    let file = File::open("./tr_quotes.txt").unwrap();
+    let lines = io::BufReader::new(file).lines();
+
+    lines.flatten().for_each(|l| corpus.add_str(&l));
+
+    for (i, v) in corpus.trigrams.iter().enumerate() {
 	if *v != 0 {
-	    let first = i / corpus.char_list.len();
-	    let second = i % corpus.char_list.len();
-	    println!("{} = {} + {} ({:?} {:?})", i, first, second, corpus.char_list[first], corpus.char_list[second]);
+	    let s: String = corpus.uncorpus_trigram(i).iter().collect();
+	    println!("{}. '{}' {}", i, s, v);
 	}
     }
 }

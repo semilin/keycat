@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap};
 
 #[derive(Hash, PartialEq, Eq)]
 pub struct Pos {
@@ -33,6 +33,25 @@ impl Corpus {
         }
         c
     }
+    pub fn uncorpus_unigram(&self, unigram: usize) -> char {
+	self.char_list[unigram].0
+    }
+    pub fn uncorpus_bigram(&self, bigram: usize) -> Vec<char> {
+	let len = self.char_list.len();
+	let c1 = bigram / len;
+	let c2 = bigram % len;
+	vec![self.char_list[c1].0, self.char_list[c2].0]
+    }
+    pub fn uncorpus_trigram(&self, trigram: usize) -> Vec<char> {
+	let len = self.char_list.len();
+	let c1 = trigram / len.pow(2);
+	let c2 = trigram % len.pow(2) / len;
+	let c3 = trigram % len;
+	vec![self.char_list[c1].0, self.char_list[c2].0, self.char_list[c3].0]
+    }
+    pub fn corpus_char(&self, c: char) -> Option<&CorpusChar> {
+	self.char_map.get(&c)
+    }
     pub fn bigram_idx(&self, c1: CorpusChar, c2: CorpusChar) -> usize {
         let len = self.char_list.len();
         (c1 * len) + c2
@@ -41,14 +60,13 @@ impl Corpus {
         let len = self.char_list.len();
         (c1 * len * len) + (c2 * len) + c3
     }
-    pub fn add_str(&mut self, s: &str) -> &mut Self {
+    pub fn add_str(&mut self, s: &str) {
         let mut iter = s.chars().map(|c| self.char_map.get(&c));
         // extremely gross fix later
 	let mut trigram: Vec<Option<&usize>> = vec![None, None, None];
 	while let Some(c) = iter.next() {
 	    trigram.rotate_left(1);
 	    trigram[2] = c;
-	    println!("{:?}", trigram);
 	    if let Some(c3) = trigram[2] {
 		self.chars[*c3] += 1;
 		if let Some(c2) = trigram[1] {
@@ -63,7 +81,6 @@ impl Corpus {
 		}
 	    }
 	}
-	self
     }
 }
 
