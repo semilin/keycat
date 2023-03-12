@@ -18,14 +18,14 @@ pub struct Corpus {
 }
 
 impl Corpus {
-    pub fn with_char_list(char_list: Vec<(char, char)>) -> Self {
+    pub fn with_char_list(char_list: &[(char, char)]) -> Self {
         let mut c = Corpus {
             char_map: HashMap::new(),
-            char_list,
-            chars: vec![],
-            bigrams: vec![],
-            trigrams: vec![],
-            skipgrams: vec![],
+            char_list: char_list.to_vec(),
+            chars: vec![0; char_list.len()],
+            bigrams: vec![0; char_list.len()*char_list.len()],
+            skipgrams: vec![0; char_list.len()*char_list.len()],
+            trigrams: vec![0; char_list.len()*char_list.len()*char_list.len()],
         };
         for (i, (c1, c2)) in c.char_list.iter().enumerate() {
             c.char_map.insert(*c1, i);
@@ -41,25 +41,29 @@ impl Corpus {
         let len = self.char_list.len();
         (c1 * len * len) + (c2 * len) + c3
     }
-    pub fn add_str(&mut self, s: &str) {
+    pub fn add_str(&mut self, s: &str) -> &mut Self {
         let mut iter = s.chars().map(|c| self.char_map.get(&c));
         // extremely gross fix later
-        if let (Some(Some(c1)), Some(Some(c2))) = (iter.next(), iter.next()) {
-            for c3 in iter {
-                if let Some(c3) = c3 {
-                    self.chars[*c1] += 1;
-                    let bg = self.bigram_idx(*c1, *c2);
-                    self.bigrams[bg] += 1;
-                    self.skipgrams[bg] += 1;
-                    let tg = self.trigram_idx(*c1, *c2, *c3);
-                    self.trigrams[tg] += 1;
-                }
-            }
-            self.chars[*c1] += 1;
-            self.chars[*c2] += 1;
-            let bg = self.bigram_idx(*c1, *c2);
-            self.bigrams[bg] += 1;
-        }
+	let mut trigram: Vec<Option<&usize>> = vec![None, None, None];
+	while let Some(c) = iter.next() {
+	    trigram.rotate_left(1);
+	    trigram[2] = c;
+	    println!("{:?}", trigram);
+	    if let Some(c3) = trigram[2] {
+		self.chars[*c3] += 1;
+		if let Some(c2) = trigram[1] {
+		    let bg = self.bigram_idx(*c2, *c3);
+		    self.bigrams[bg] += 1;
+		    if let Some(c1) = trigram[0] {
+			let tg = self.trigram_idx(*c1, *c2, *c3);
+			self.trigrams[tg] += 1;
+			let sg = self.bigram_idx(*c1, *c3);
+			self.skipgrams[sg] += 1;
+		    }
+		}
+	    }
+	}
+	self
     }
 }
 
