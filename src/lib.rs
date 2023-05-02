@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 pub type Pos = usize;
 
-pub type CorpusChar = usize;
 pub type CorpusIndex = usize;
+pub type CorpusChar = CorpusIndex;
 
 pub struct Corpus {
     char_map: HashMap<char, CorpusChar>,
@@ -61,7 +61,7 @@ impl Corpus {
     pub fn add_str(&mut self, s: &str) {
         let mut iter = s.chars().map(|c| self.char_map.get(&c));
         // extremely gross fix later
-	let mut trigram: Vec<Option<&CorpusIndex>> = vec![None, None, None];
+	let mut trigram: Vec<Option<&CorpusChar>> = vec![None, None, None];
 	while let Some(c) = iter.next() {
 	    trigram.rotate_left(1);
 	    trigram[2] = c;
