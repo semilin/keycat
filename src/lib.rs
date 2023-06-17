@@ -1,20 +1,31 @@
 use std::collections::HashMap;
+// use rayon::prelude::*;
 
 pub type Pos = usize;
 
 pub type CorpusIndex = usize;
 pub type CorpusChar = CorpusIndex;
 
+/// Structure for storing text ngram frequencies. 
 pub struct Corpus {
     char_map: HashMap<char, CorpusChar>,
     pub char_list: Vec<Vec<char>>,
-    pub chars: Vec<CorpusIndex>,
-    pub bigrams: Vec<CorpusIndex>,
-    pub skipgrams: Vec<CorpusIndex>,
-    pub trigrams: Vec<CorpusIndex>,
+    pub chars: Vec<u32>,
+    pub bigrams: Vec<u32>,
+    pub skipgrams: Vec<u32>,
+    pub trigrams: Vec<u32>,
 }
 
 impl Corpus {
+    /// ```rust
+    /// use keycat::Corpus;
+    /// let mut corpus = Corpus::with_char_list(
+    ///     "abcdefghijklmnopqrstuvwxyz"
+    ///         .chars()
+    ///         .map(|c| vec![c, c.to_uppercase().next().unwrap()])
+    ///         .collect::<Vec<Vec<char>>>()
+    /// );
+    /// ```
     pub fn with_char_list(char_list: Vec<Vec<char>>) -> Self {
         let mut c = Corpus {
             char_map: HashMap::new(),
@@ -82,4 +93,85 @@ impl Corpus {
     }
 }
 
-pub type Layout = Vec<CorpusChar>;
+/// Flat keyboard layout structure.
+pub struct Layout {
+    /// The actual details of each position is irrelevant to Keycat,
+    /// so it doesn't need to be more complicated than just a list of
+    /// CorpusChars.
+    matrix: Vec<CorpusChar>,
+}
+
+impl Layout {
+    pub fn frequency(self, corpus: Corpus, ns: Nstroke) -> u32 {
+        match ns {
+            Nstroke::Monostroke(idx) => corpus.chars[self.matrix[idx]],
+            Nstroke::Bistroke(idx) => corpus.bigrams[corpus.bigram_idx(idx[0], idx[1])],
+            Nstroke::Tristroke(idx) => corpus.bigrams[corpus.trigram_idx(idx[0], idx[1], idx[2])],
+        }
+    }
+}
+
+pub enum Nstroke {
+    Monostroke(usize),
+    Bistroke([usize; 2]),
+    Tristroke([usize; 3]),
+}
+
+pub enum NgramType {
+    Monogram,
+    Bigram,
+    Skipgram,
+    Trigram,
+}
+
+pub type MetricIndex = usize;
+pub type NstrokeIndex = usize;
+
+pub struct NstrokeAmount {
+    metric: MetricIndex,
+    nstroke: Nstroke,
+    amount: f32,
+}
+
+impl NstrokeAmount {
+    pub fn new(metric: MetricIndex, nstroke: Nstroke, amount: f32) -> Self {
+        Self {
+            metric, nstroke, amount
+        }
+    }
+}
+
+/// Structure for storing metric data and performing analysis on layouts.
+pub struct MetricTable {
+    /// The list of metrics. Not much data about the metric is needed,
+    /// so just the NgramType is stored.
+    pub metrics: Vec<NgramType>,
+    /// The list of strokes needed for analysis.
+    pub strokes: Vec<NstrokeAmount>,
+    /// Maps a position to all of the strokes that contain it.
+    pub position_strokes: Vec<Vec<NstrokeIndex>> ,
+}
+
+impl MetricTable {
+    /// ```rust
+    /// use keycat::{NgramType, Nstroke, NstrokeAmount, MetricTable};
+    /// let metrics = vec![NgramType::Bigram];
+    /// let strokes = vec![NstrokeAmount::new(0, Nstroke::Bistroke([0, 2]), 0.0)];
+    /// let table = MetricTable::from(metrics, strokes, 3);
+    /// ```
+    pub fn from(metrics: Vec<NgramType>, strokes: Vec<NstrokeAmount>, num_positions: usize) -> Self {
+        let mut position_strokes: Vec<Vec<NstrokeIndex>> = vec![vec![]; num_positions];
+        for (i, stroke) in strokes.iter().map(|s| &s.nstroke).enumerate() {
+            for pos in match stroke {
+                Nstroke::Monostroke(v) => vec![*v],
+                Nstroke::Bistroke(a) => a.to_vec(),
+                Nstroke::Tristroke(a) => a.to_vec(),
+            } {
+                position_strokes[pos].push(i);
+            }
+        }
+        Self {
+            metrics, strokes, position_strokes
+        }
+    }
+}
