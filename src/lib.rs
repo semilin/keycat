@@ -6,7 +6,7 @@ pub type Pos = usize;
 pub type CorpusIndex = usize;
 pub type CorpusChar = CorpusIndex;
 
-/// Structure for storing text ngram frequencies. 
+/// Structure for storing text ngram frequencies.
 pub struct Corpus {
     char_map: HashMap<char, CorpusChar>,
     pub char_list: Vec<Vec<char>>,
@@ -94,23 +94,25 @@ impl Corpus {
 }
 
 /// Flat keyboard layout structure.
+#[derive(Clone)]
 pub struct Layout {
     /// The actual details of each position is irrelevant to Keycat,
     /// so it doesn't need to be more complicated than just a list of
     /// CorpusChars.
-    matrix: Vec<CorpusChar>,
+    pub matrix: Vec<CorpusChar>,
 }
 
 impl Layout {
-    pub fn frequency(self, corpus: Corpus, ns: Nstroke) -> u32 {
+    pub fn frequency(&self, corpus: &Corpus, ns: &Nstroke) -> u32 {
         match ns {
-            Nstroke::Monostroke(idx) => corpus.chars[self.matrix[idx]],
-            Nstroke::Bistroke(idx) => corpus.bigrams[corpus.bigram_idx(idx[0], idx[1])],
-            Nstroke::Tristroke(idx) => corpus.bigrams[corpus.trigram_idx(idx[0], idx[1], idx[2])],
+            Nstroke::Monostroke(idx) => corpus.chars[self.matrix[*idx]],
+            Nstroke::Bistroke(idx) => corpus.bigrams[corpus.bigram_idx(self.matrix[idx[0]], self.matrix[idx[1]])],
+            Nstroke::Tristroke(idx) => corpus.trigrams[corpus.trigram_idx(self.matrix[idx[0]], self.matrix[idx[1]], self.matrix[idx[2]])],
         }
     }
 }
 
+#[derive(Debug)]
 pub enum Nstroke {
     Monostroke(usize),
     Bistroke([usize; 2]),
@@ -127,39 +129,50 @@ pub enum NgramType {
 pub type MetricIndex = usize;
 pub type NstrokeIndex = usize;
 
-pub struct NstrokeAmount {
+pub struct MetricAmount {
     metric: MetricIndex,
-    nstroke: Nstroke,
     amount: f32,
 }
 
-impl NstrokeAmount {
-    pub fn new(metric: MetricIndex, nstroke: Nstroke, amount: f32) -> Self {
+impl MetricAmount {
+    pub fn new(metric: MetricIndex, amount: f32) -> Self {
+        Self { metric, amount }
+    }
+}
+
+pub struct NstrokeData {
+    nstroke: Nstroke,
+    amounts: Vec<MetricAmount>,
+}
+
+impl NstrokeData {
+    pub fn new(nstroke: Nstroke, amounts: Vec<MetricAmount>) -> Self {
         Self {
-            metric, nstroke, amount
+            nstroke, amounts
         }
     }
 }
 
 /// Structure for storing metric data and performing analysis on layouts.
-pub struct MetricTable {
+pub struct MetricData {
     /// The list of metrics. Not much data about the metric is needed,
     /// so just the NgramType is stored.
     pub metrics: Vec<NgramType>,
     /// The list of strokes needed for analysis.
-    pub strokes: Vec<NstrokeAmount>,
+    pub strokes: Vec<NstrokeData>,
     /// Maps a position to all of the strokes that contain it.
     pub position_strokes: Vec<Vec<NstrokeIndex>> ,
 }
 
-impl MetricTable {
+impl MetricData {
     /// ```rust
-    /// use keycat::{NgramType, Nstroke, NstrokeAmount, MetricTable};
+    /// use keycat::{NgramType, Nstroke, NstrokeData, MetricAmount, MetricData};
     /// let metrics = vec![NgramType::Bigram];
-    /// let strokes = vec![NstrokeAmount::new(0, Nstroke::Bistroke([0, 2]), 0.0)];
-    /// let table = MetricTable::from(metrics, strokes, 3);
+    /// let strokes = vec![NstrokeData::new(Nstroke::Bistroke([0, 1]),
+    ///                                     vec![MetricAmount::new(0, 0.0)])];
+    /// let data = MetricData::from(metrics, strokes, 2);
     /// ```
-    pub fn from(metrics: Vec<NgramType>, strokes: Vec<NstrokeAmount>, num_positions: usize) -> Self {
+    pub fn from(metrics: Vec<NgramType>, strokes: Vec<NstrokeData>, num_positions: usize) -> Self {
         let mut position_strokes: Vec<Vec<NstrokeIndex>> = vec![vec![]; num_positions];
         for (i, stroke) in strokes.iter().map(|s| &s.nstroke).enumerate() {
             for pos in match stroke {
@@ -173,5 +186,35 @@ impl MetricTable {
         Self {
             metrics, strokes, position_strokes
         }
+    }
+}
+
+#[derive(Clone)]
+pub struct Analyzer<'a> {
+    pub data: &'a MetricData,
+    pub corpus: &'a Corpus,
+    pub layout: Layout,
+    pub stats: Vec<f32>,
+}
+
+impl<'a> Analyzer<'a> {
+    pub fn from(data: &'a MetricData, corpus: &'a Corpus, layout: Layout) -> Self {
+        let mut stats: Vec<f32> = vec![0.0; data.metrics.len()];
+
+	for stroke in &data.strokes {
+	    let ns = &stroke.nstroke;
+	    println!("{:?}", ns);
+
+
+	    let freq = layout.frequency(corpus, ns);
+	    println!("{:?}", freq);
+	    for amount in &stroke.amounts {
+		stats[amount.metric] = freq as f32 * amount.amount;
+	    }
+	}
+	
+	Self {
+	    data, corpus, layout, stats
+	}
     }
 }
