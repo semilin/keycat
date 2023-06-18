@@ -107,6 +107,7 @@ impl Layout {
         match ns {
             Nstroke::Monostroke(idx) => corpus.chars[self.matrix[*idx]],
             Nstroke::Bistroke(idx) => corpus.bigrams[corpus.bigram_idx(self.matrix[idx[0]], self.matrix[idx[1]])],
+	    Nstroke::Skipstroke(idx) => corpus.skipgrams[corpus.bigram_idx(self.matrix[idx[0]], self.matrix[idx[1]])],
             Nstroke::Tristroke(idx) => corpus.trigrams[corpus.trigram_idx(self.matrix[idx[0]], self.matrix[idx[1]], self.matrix[idx[2]])],
         }
     }
@@ -116,6 +117,7 @@ impl Layout {
 pub enum Nstroke {
     Monostroke(usize),
     Bistroke([usize; 2]),
+    Skipstroke([usize; 2]),
     Tristroke([usize; 3]),
 }
 
@@ -178,6 +180,7 @@ impl MetricData {
             for pos in match stroke {
                 Nstroke::Monostroke(v) => vec![*v],
                 Nstroke::Bistroke(a) => a.to_vec(),
+		Nstroke::Skipstroke(a) => a.to_vec(),
                 Nstroke::Tristroke(a) => a.to_vec(),
             } {
                 position_strokes[pos].push(i);
@@ -203,11 +206,8 @@ impl<'a> Analyzer<'a> {
 
 	for stroke in &data.strokes {
 	    let ns = &stroke.nstroke;
-	    println!("{:?}", ns);
-
-
 	    let freq = layout.frequency(corpus, ns);
-	    println!("{:?}", freq);
+
 	    for amount in &stroke.amounts {
 		stats[amount.metric] = freq as f32 * amount.amount;
 	    }

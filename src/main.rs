@@ -3,12 +3,18 @@ use std::fs::File;
 use std::io::{self, BufRead};
 
 pub fn main() {
-    let mut corpus = Corpus::with_char_list(
-        "abcdefghijklmnopqrstuvwxyz,./'"
+    let mut corpus = {
+        let mut char_list = "abcdefghijklmnopqrstuvwxyz"
             .chars()
             .map(|c| vec![c, c.to_uppercase().next().unwrap()])
-	    .collect::<Vec<Vec<char>>>()
-    );
+            .collect::<Vec<Vec<char>>>();
+        char_list.extend(vec![vec![',', '<'],
+			      vec!['.', '>'],
+			      vec!['/', '?'],
+			      vec!['\'', '\"']]);
+        Corpus::with_char_list(char_list)
+    };
+
     println!("{:?}", corpus.char_list);
     let file = File::open("./tr.txt").unwrap();
     let lines = io::BufReader::new(file).lines();
