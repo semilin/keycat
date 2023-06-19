@@ -1,4 +1,6 @@
 use std::collections::HashMap;
+#[cfg(feature = "serde")]
+use serde::{Serialize, Deserialize};
 // use rayon::prelude::*;
 
 pub type Pos = usize;
@@ -113,6 +115,7 @@ impl Layout {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
 pub enum Nstroke {
     Monostroke(usize),
@@ -121,6 +124,7 @@ pub enum Nstroke {
     Tristroke([usize; 3]),
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum NgramType {
     Monogram,
     Bigram,
@@ -131,6 +135,7 @@ pub enum NgramType {
 pub type MetricIndex = usize;
 pub type NstrokeIndex = usize;
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MetricAmount {
     metric: MetricIndex,
     amount: f32,
@@ -142,6 +147,7 @@ impl MetricAmount {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct NstrokeData {
     nstroke: Nstroke,
     amounts: Vec<MetricAmount>,
@@ -155,6 +161,7 @@ impl NstrokeData {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 /// Structure for storing metric data and performing analysis on layouts.
 pub struct MetricData {
     /// The list of metrics. Not much data about the metric is needed,
@@ -163,7 +170,7 @@ pub struct MetricData {
     /// The list of strokes needed for analysis.
     pub strokes: Vec<NstrokeData>,
     /// Maps a position to all of the strokes that contain it.
-    pub position_strokes: Vec<Vec<NstrokeIndex>> ,
+    pub position_strokes: Vec<Vec<NstrokeIndex>>,
 }
 
 impl MetricData {
