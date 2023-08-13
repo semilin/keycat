@@ -147,7 +147,7 @@ pub enum NgramType {
     Trigram,
 }
 
-type MetricIndex = usize;
+pub type MetricIndex = usize;
 pub type NstrokeIndex = usize;
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -169,9 +169,9 @@ impl MetricAmount {
 #[derive(Debug)]
 pub struct NstrokeData {
     #[cfg_attr(feature = "serde", serde(rename = "ns"))]
-    nstroke: Nstroke,
+    pub nstroke: Nstroke,
     #[cfg_attr(feature = "serde", serde(rename = "ams"))]
-    amounts: Vec<MetricAmount>,
+    pub amounts: Vec<MetricAmount>,
 }
 
 impl NstrokeData {
@@ -251,7 +251,7 @@ impl<'a> Analyzer<'a> {
 	}
 	
 	Self {
-	    data, corpus, layout, stats
+p	    data, corpus, layout, stats
 	}
     }
 }
