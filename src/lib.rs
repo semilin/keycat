@@ -253,7 +253,7 @@ impl<'a> Analyzer<'a> {
                 } else {
                     basefreq
                 };
-		stats[amount.metric] = freq as f32 * amount.amount;
+		stats[amount.metric] += freq as f32 * amount.amount;
 	    }
 	}
 	
