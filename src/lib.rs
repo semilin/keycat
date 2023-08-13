@@ -121,15 +121,11 @@ impl Layout {
 }
 
 #[cfg_attr(feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(tag = "k"))]
+    derive(Serialize, Deserialize))]
 #[derive(Debug)]
 pub enum Nstroke {
-    #[cfg_attr(feature = "serde", serde(rename = "M"))]
     Monostroke(usize),
-    #[cfg_attr(feature = "serde", serde(rename = "B"))]
     Bistroke([usize; 2]),
-    #[cfg_attr(feature = "serde", serde(rename = "T"))]
     Tristroke([usize; 3]),
 }
 
