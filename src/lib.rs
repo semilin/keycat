@@ -139,7 +139,7 @@ pub enum Nstroke {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum NgramType {
     Monogram,
     Bigram,
@@ -151,6 +151,7 @@ type MetricIndex = usize;
 pub type NstrokeIndex = usize;
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug)]
 pub struct MetricAmount {
     #[cfg_attr(feature = "serde", serde(rename = "met"))]
     metric: MetricIndex,
@@ -165,6 +166,7 @@ impl MetricAmount {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug)]
 pub struct NstrokeData {
     #[cfg_attr(feature = "serde", serde(rename = "ns"))]
     nstroke: Nstroke,
@@ -181,6 +183,7 @@ impl NstrokeData {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug)]
 /// Structure for storing metric data and performing analysis on layouts.
 pub struct MetricData {
     /// The list of metrics. Not much data about the metric is needed,
