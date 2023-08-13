@@ -105,11 +105,16 @@ pub struct Layout {
 }
 
 impl Layout {
-    pub fn frequency(&self, corpus: &Corpus, ns: &Nstroke) -> u32 {
+    pub fn frequency(&self, corpus: &Corpus, ns: &Nstroke, ng: Option<NgramType>) -> u32 {
         match ns {
             Nstroke::Monostroke(idx) => corpus.chars[self.matrix[*idx]],
-            Nstroke::Bistroke(idx) => corpus.bigrams[corpus.bigram_idx(self.matrix[idx[0]], self.matrix[idx[1]])],
-	    Nstroke::Skipstroke(idx) => corpus.skipgrams[corpus.bigram_idx(self.matrix[idx[0]], self.matrix[idx[1]])],
+            Nstroke::Bistroke(idx) => {
+                let idx = corpus.bigram_idx(self.matrix[idx[0]], self.matrix[idx[1]]);
+                match ng {
+                    Some(NgramType::Skipgram) => corpus.skipgrams[idx],
+                    _ => corpus.bigrams[idx]
+                }
+            },
             Nstroke::Tristroke(idx) => corpus.trigrams[corpus.trigram_idx(self.matrix[idx[0]], self.matrix[idx[1]], self.matrix[idx[2]])],
         }
     }
@@ -120,7 +125,6 @@ impl Layout {
 pub enum Nstroke {
     Monostroke(usize),
     Bistroke([usize; 2]),
-    Skipstroke([usize; 2]),
     Tristroke([usize; 3]),
 }
 
@@ -132,7 +136,7 @@ pub enum NgramType {
     Trigram,
 }
 
-pub type MetricIndex = usize;
+type MetricIndex = usize;
 pub type NstrokeIndex = usize;
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -187,7 +191,6 @@ impl MetricData {
             for pos in match stroke {
                 Nstroke::Monostroke(v) => vec![*v],
                 Nstroke::Bistroke(a) => a.to_vec(),
-		Nstroke::Skipstroke(a) => a.to_vec(),
                 Nstroke::Tristroke(a) => a.to_vec(),
             } {
                 position_strokes[pos].push(i);
@@ -213,9 +216,18 @@ impl<'a> Analyzer<'a> {
 
 	for stroke in &data.strokes {
 	    let ns = &stroke.nstroke;
-	    let freq = layout.frequency(corpus, ns);
+	    let basefreq = layout.frequency(corpus, ns, None);
+            let skipfreq = match ns {
+                Nstroke::Bistroke(_) => Some(layout.frequency(corpus, ns, Some(NgramType::Skipgram))),
+                _ => None
+            };
 
 	    for amount in &stroke.amounts {
+                let freq = if let NgramType::Skipgram = data.metrics[amount.metric] {
+                    skipfreq.unwrap()
+                } else {
+                    basefreq
+                };
 		stats[amount.metric] = freq as f32 * amount.amount;
 	    }
 	}
