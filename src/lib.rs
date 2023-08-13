@@ -113,6 +113,13 @@ pub struct Layout {
 }
 
 impl Layout {
+    pub fn nstroke_chars(&self, ns: &Nstroke) -> Vec<CorpusChar> {
+        match ns {
+            Nstroke::Monostroke(idx) => vec![self.matrix[*idx]],
+            Nstroke::Bistroke(idx) => idx.iter().map(|p| self.matrix[*p]).collect(),
+            Nstroke::Tristroke(idx) => idx.iter().map(|p| self.matrix[*p]).collect(),
+        }
+    }
     pub fn frequency(&self, corpus: &Corpus, ns: &Nstroke, ng: Option<NgramType>) -> u32 {
         match ns {
             Nstroke::Monostroke(idx) => corpus.chars[self.matrix[*idx]],
