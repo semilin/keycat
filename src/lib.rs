@@ -133,6 +133,9 @@ impl Layout {
             Nstroke::Tristroke(idx) => corpus.trigrams[corpus.trigram_idx(self.matrix[idx[0]], self.matrix[idx[1]], self.matrix[idx[2]])],
         }
     }
+    pub fn total_char_count(&self, corpus: &Corpus) -> u32 {
+        self.matrix.iter().map(|c| corpus.chars[*c]).sum()
+    }
 }
 
 #[cfg_attr(feature = "serde",
