@@ -16,24 +16,21 @@ pub fn main() {
     };
 
     println!("{:?}", corpus.char_list);
-    let file = File::open("./tr.txt").unwrap();
-    let lines = io::BufReader::new(file).lines();
 
-    lines.flatten().for_each(|l| corpus.add_str(&l));
+    corpus.add_file("./tr.txt").unwrap();
 
     for (i, v) in corpus.bigrams.iter().enumerate() {
-	if *v >= 20000 {
+	if *v >= 533 {
 	    let s: String = corpus.uncorpus_bigram(i).iter().collect();
 	    println!("{}. '{}' {}", i, s, v);
 	}
     }
 
-    let metrics = vec![NgramType::Bigram];
+    let metrics = vec![NgramType::Bigram, NgramType::Skipgram];
     let strokes = vec![
-        // NstrokeData::new(Nstroke::Bistroke([0, 2]), vec![MetricAmount::new(0, 0.0)]),
-        // NstrokeData::new(Nstroke::Bistroke([3, 4]), vec![MetricAmount::new(0, 0.0)]),
-        NstrokeData::new(Nstroke::Bistroke([0, 1]), vec![MetricAmount::new(0, 1.0)])];
-    let data = MetricData::from(metrics, strokes, 2);
+        NstrokeData::new(Nstroke::Bistroke([0, 13]), vec![MetricAmount::new(0, 1.0)]),
+        NstrokeData::new(Nstroke::Bistroke([0, 13]), vec![MetricAmount::new(1, 1.0)])];
+    let data = MetricData::from(metrics, strokes, 30);
     println!("{:?}", data.position_strokes);
 
     let layout = Layout {

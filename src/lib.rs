@@ -1,4 +1,6 @@
 use std::collections::HashMap;
+use std::io::{BufRead, BufReader};
+use std::fs::File;
 #[cfg(feature = "serde")]
 use serde::{Serialize, Deserialize};
 // use rayon::prelude::*;
@@ -92,6 +94,12 @@ impl Corpus {
 		}
 	    }
 	}
+    }
+    pub fn add_file(&mut self, path: &str) -> Result<(), Box<dyn std::error::Error>> {
+        let file = File::open(path)?;
+        let lines = BufReader::new(file).lines();
+        lines.flatten().for_each(|l| self.add_str(&l));
+        Ok(())
     }
 }
 
