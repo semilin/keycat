@@ -121,7 +121,8 @@ impl Layout {
 }
 
 #[cfg_attr(feature = "serde",
-    derive(Serialize, Deserialize))]
+    derive(Serialize, Deserialize),
+    serde(untagged))]
 #[derive(Debug)]
 pub enum Nstroke {
     Monostroke(usize),
