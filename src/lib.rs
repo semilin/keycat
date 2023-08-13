@@ -129,6 +129,7 @@ pub enum Nstroke {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Copy, Clone)]
 pub enum NgramType {
     Monogram,
     Bigram,
