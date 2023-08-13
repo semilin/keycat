@@ -120,11 +120,16 @@ impl Layout {
     }
 }
 
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(tag = "k"))]
 #[derive(Debug)]
 pub enum Nstroke {
+    #[cfg_attr(feature = "serde", serde(rename = "M"))]
     Monostroke(usize),
+    #[cfg_attr(feature = "serde", serde(rename = "B"))]
     Bistroke([usize; 2]),
+    #[cfg_attr(feature = "serde", serde(rename = "T"))]
     Tristroke([usize; 3]),
 }
 
@@ -142,7 +147,9 @@ pub type NstrokeIndex = usize;
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MetricAmount {
+    #[cfg_attr(feature = "serde", serde(rename = "met"))]
     metric: MetricIndex,
+    #[cfg_attr(feature = "serde", serde(rename = "amt"))]
     amount: f32,
 }
 
@@ -154,7 +161,9 @@ impl MetricAmount {
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct NstrokeData {
+    #[cfg_attr(feature = "serde", serde(rename = "ns"))]
     nstroke: Nstroke,
+    #[cfg_attr(feature = "serde", serde(rename = "ams"))]
     amounts: Vec<MetricAmount>,
 }
 
