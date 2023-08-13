@@ -161,9 +161,9 @@ pub type NstrokeIndex = usize;
 #[derive(Debug)]
 pub struct MetricAmount {
     #[cfg_attr(feature = "serde", serde(rename = "met"))]
-    metric: MetricIndex,
+    pub metric: MetricIndex,
     #[cfg_attr(feature = "serde", serde(rename = "amt"))]
-    amount: f32,
+    pub amount: f32,
 }
 
 impl MetricAmount {
