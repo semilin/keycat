@@ -251,7 +251,7 @@ impl<'a> Analyzer<'a> {
 	}
 	
 	Self {
-p	    data, corpus, layout, stats
+	    data, corpus, layout, stats
 	}
     }
 }
