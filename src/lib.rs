@@ -11,6 +11,7 @@ pub type CorpusIndex = usize;
 pub type CorpusChar = CorpusIndex;
 
 /// Structure for storing text ngram frequencies.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Corpus {
     char_map: HashMap<char, CorpusChar>,
     pub char_list: Vec<Vec<char>>,
