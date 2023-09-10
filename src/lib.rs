@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::io::{BufRead, BufReader};
+use std::io::{self, BufRead, BufReader};
 use std::path::Path;
 use std::fs::File;
 #[cfg(feature = "serde")]
@@ -97,7 +97,7 @@ impl Corpus {
 	    }
 	}
     }
-    pub fn add_file<P: AsRef<Path>>(&mut self, path: P) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn add_file<P: AsRef<Path>>(&mut self, path: P) -> io::Result<()> {
         let file = File::open(path)?;
         let lines = BufReader::new(file).lines();
         lines.flatten().for_each(|l| self.add_str(&l));
