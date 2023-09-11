@@ -232,23 +232,22 @@ impl MetricData {
     }
 }
 
-#[derive(Clone)]
-pub struct Analyzer<'a> {
-    pub data: &'a MetricData,
-    pub corpus: &'a Corpus,
+pub struct Analyzer {
+    pub data: MetricData,
+    pub corpus: Corpus,
     pub layout: Layout,
     pub stats: Vec<f32>,
 }
 
-impl<'a> Analyzer<'a> {
-    pub fn from(data: &'a MetricData, corpus: &'a Corpus, layout: Layout) -> Self {
+impl Analyzer {
+    pub fn from(data: MetricData, corpus: Corpus, layout: Layout) -> Self {
         let mut stats: Vec<f32> = vec![0.0; data.metrics.len()];
 
 	for stroke in &data.strokes {
 	    let ns = &stroke.nstroke;
-	    let basefreq = layout.frequency(corpus, ns, None);
+	    let basefreq = layout.frequency(&corpus, ns, None);
             let skipfreq = match ns {
-                Nstroke::Bistroke(_) => Some(layout.frequency(corpus, ns, Some(NgramType::Skipgram))),
+                Nstroke::Bistroke(_) => Some(layout.frequency(&corpus, ns, Some(NgramType::Skipgram))),
                 _ => None
             };
 
