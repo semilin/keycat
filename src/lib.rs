@@ -235,7 +235,7 @@ impl MetricData {
 pub struct Analyzer {
     pub data: MetricData,
     pub corpus: Corpus,
-    pub layout: Layout,
+    pub layouts: Vec<Layout>,
     pub stats: Vec<f32>,
 }
 
@@ -262,7 +262,7 @@ impl Analyzer {
 	}
 	
 	Self {
-	    data, corpus, layout, stats
+	    data, corpus, layouts: vec![layout], stats
 	}
     }
 }
