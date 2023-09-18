@@ -1,6 +1,6 @@
-use keycat::{Analyzer, Corpus, Layout, MetricAmount, MetricData, NgramType, Nstroke, NstrokeData};
-use std::fs::File;
-use std::io::{self, BufRead, Write};
+use keycat::{
+    Analyzer, Corpus, Layout, MetricAmount, MetricData, NgramType, Nstroke, NstrokeData, Swap,
+};
 
 pub fn main() {
     let mut corpus = {
@@ -17,26 +17,25 @@ pub fn main() {
         Corpus::with_char_list(char_list)
     };
 
-    println!("{:?}", corpus.char_list);
+    // println!("{:?}", corpus.char_list);
 
-    corpus
-        .add_file("./iweb-corpus-samples-cleaned.txt")
-        .unwrap();
+    corpus.add_file("./tr.txt").unwrap();
 
-    for (i, v) in corpus.bigrams.iter().enumerate() {
-        if *v >= 533 {
-            let s: String = corpus.uncorpus_bigram(i).iter().collect();
-            println!("{}. '{}' {}", i, s, v);
-        }
-    }
+    // for (i, v) in corpus.bigrams.iter().enumerate() {
+    //     if *v >= 533 {
+    //         let s: String = corpus.uncorpus_bigram(i).iter().collect();
+    //         println!("{}. '{}' {}", i, s, v);
+    //     }
+    // }
 
     let metrics = vec![NgramType::Bigram, NgramType::Skipgram];
     let strokes = vec![
-        NstrokeData::new(Nstroke::Bistroke([0, 13]), vec![MetricAmount::new(0, 1.0)]),
-        NstrokeData::new(Nstroke::Bistroke([0, 13]), vec![MetricAmount::new(1, 1.0)]),
+        NstrokeData::new(Nstroke::Bistroke([0, 1]), vec![MetricAmount::new(0, 1.0)]),
+        NstrokeData::new(Nstroke::Bistroke([0, 2]), vec![MetricAmount::new(0, 1.0)]),
+        NstrokeData::new(Nstroke::Bistroke([2, 1]), vec![MetricAmount::new(0, 1.0)]),
+        NstrokeData::new(Nstroke::Bistroke([1, 2]), vec![MetricAmount::new(1, 1.0)]),
     ];
-    let data = MetricData::from(metrics, strokes, 30);
-    println!("{:?}", data.position_strokes);
+    let data = MetricData::from(metrics, strokes, 3);
 
     let layout = Layout {
         matrix: "flhvz'wuoysrntkcdeaixjbmqpg,./"
@@ -45,7 +44,22 @@ pub fn main() {
             .collect(),
     };
 
-    let analyzer = Analyzer::from(data, corpus, layout);
+    let mut analyzer = Analyzer::from(data, corpus, layout);
 
+    println!(
+        "{:?}",
+        analyzer
+            .data
+            .strokes
+            .iter()
+            .map(|x| &x.nstroke)
+            .collect::<Vec<_>>()
+    );
+    println!("{:?}", analyzer.data.position_strokes);
+
+    println!("{:?}", analyzer.stats);
+    analyzer.swap(0, Swap::new(0, 1));
+    println!("{:?}", analyzer.stats);
+    analyzer.swap(0, Swap::new(0, 1));
     println!("{:?}", analyzer.stats);
 }

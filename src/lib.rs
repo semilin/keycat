@@ -240,6 +240,18 @@ impl MetricData {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct Swap {
+    a: usize,
+    b: usize,
+}
+
+impl Swap {
+    pub fn new(a: usize, b: usize) -> Self {
+        Self { a, b }
+    }
+}
+
 pub struct Analyzer {
     pub data: MetricData,
     pub corpus: Corpus,
@@ -255,15 +267,13 @@ impl Analyzer {
             let ns = &stroke.nstroke;
             let basefreq = layout.frequency(&corpus, ns, None);
             let skipfreq = match ns {
-                Nstroke::Bistroke(_) => {
-                    Some(layout.frequency(&corpus, ns, Some(NgramType::Skipgram)))
-                }
-                _ => None,
+                Nstroke::Bistroke(_) => layout.frequency(&corpus, ns, Some(NgramType::Skipgram)),
+                _ => 0,
             };
 
             for amount in &stroke.amounts {
                 let freq = if let NgramType::Skipgram = data.metrics[amount.metric] {
-                    skipfreq.unwrap()
+                    skipfreq
                 } else {
                     basefreq
                 };
@@ -277,5 +287,118 @@ impl Analyzer {
             layouts: vec![layout],
             stats,
         }
+    }
+    pub fn swap(&mut self, layout: usize, swap: Swap) {
+        let corpus = &self.corpus;
+        let l = &mut self.layouts[layout];
+        let c_a = l.matrix[swap.a];
+        let c_b = l.matrix[swap.b];
+        let it1 = &mut self.data.position_strokes[swap.a].iter();
+        let it2 = &mut self.data.position_strokes[swap.b].iter();
+        let mut last_a: usize = 0;
+        let mut last_b: usize = 0;
+        loop {
+            let (s1, s2) = if last_a < last_b {
+                (it1.next(), None)
+            } else if last_b < last_a {
+                (None, it2.next())
+            } else {
+                (it1.next(), it2.next())
+            };
+
+            let stroke = match (s1, s2) {
+                (Some(a), Some(b)) => {
+                    last_a = *a;
+                    last_b = *b;
+                    if a < b {
+                        *a
+                    } else {
+                        *b
+                    }
+                }
+                (Some(s), None) => {
+                    last_a = *s;
+                    *s
+                }
+                (None, Some(s)) => {
+                    last_b = *s;
+                    *s
+                }
+                (None, None) => break,
+            };
+
+            // println!("strokes: {}, {}, [{}]", last_a, last_b, stroke);
+
+            let data = &self.data.strokes[stroke];
+            let ns = &data.nstroke;
+            let basefreqs: [i32; 2] = [
+                l.frequency(&self.corpus, ns, None) as i32,
+                match ns {
+                    Nstroke::Monostroke(a) => {
+                        corpus.chars[if *a == swap.a {
+                            c_b
+                        } else if *a == swap.b {
+                            c_a
+                        } else {
+                            l.matrix[*a]
+                        }]
+                    }
+                    Nstroke::Bistroke(arr) => {
+                        let [a, b]: [usize; 2] = arr.map(|p| {
+                            if p == swap.a {
+                                c_b
+                            } else if p == swap.b {
+                                c_a
+                            } else {
+                                l.matrix[p]
+                            }
+                        });
+                        // println!("{:?}", b);
+                        // println!("{} | {}{}", arr.map(|p| corpus.uncorpus_unigram(l.matrix[p])).iter().collect::<String>(), corpus.uncorpus_unigram(a), corpus.uncorpus_unigram(b));
+                        corpus.bigrams[corpus.bigram_idx(a, b)]
+                    }
+                    Nstroke::Tristroke(arr) => {
+                        let [a, b, c]: [usize; 3] = arr.map(|p| {
+                            if p == swap.a {
+                                c_b
+                            } else if p == swap.b {
+                                c_a
+                            } else {
+                                l.matrix[p]
+                            }
+                        });
+                        corpus.trigrams[corpus.trigram_idx(a, b, c)]
+                    }
+                } as i32,
+            ];
+            let skipfreqs: [i32; 2] = match ns {
+                Nstroke::Bistroke(arr) => [
+                    l.frequency(&corpus, ns, Some(NgramType::Skipgram)) as i32,
+                    {
+                        let [a, b]: [usize; 2] = arr.map(|p| {
+                            if p == swap.a {
+                                c_b
+                            } else if p == swap.b {
+                                c_a
+                            } else {
+                                l.matrix[p]
+                            }
+                        });
+                        corpus.skipgrams[corpus.bigram_idx(a, b)] as i32
+                    },
+                ],
+                _ => [0, 0],
+            };
+
+            for amount in &data.amounts {
+                let diff: f32 = if let NgramType::Skipgram = self.data.metrics[amount.metric] {
+                    skipfreqs[1] - skipfreqs[0]
+                } else {
+                    basefreqs[1] - basefreqs[0]
+                } as f32;
+                self.stats[amount.metric] += amount.amount * diff;
+            }
+        }
+        l.matrix.swap(swap.a, swap.b);
     }
 }
