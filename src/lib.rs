@@ -399,7 +399,7 @@ impl Analyzer {
                 } else {
                     basefreqs[1] - basefreqs[0]
                 } as f32;
-                println!("{: >8}", diff);
+                // println!("{: >8}", diff);
                 self.stats[amount.metric] += amount.amount * diff;
             }
         }
