@@ -31,14 +31,17 @@ pub fn main() {
     let metrics = vec![NgramType::Bigram, NgramType::Skipgram];
     let strokes = vec![
         NstrokeData::new(Nstroke::Bistroke([0, 1]), vec![MetricAmount::new(0, 1.0)]),
+        NstrokeData::new(Nstroke::Bistroke([1, 0]), vec![MetricAmount::new(0, 1.0)]),
         NstrokeData::new(Nstroke::Bistroke([0, 2]), vec![MetricAmount::new(0, 1.0)]),
+        NstrokeData::new(Nstroke::Bistroke([2, 0]), vec![MetricAmount::new(0, 1.0)]),
+        NstrokeData::new(Nstroke::Bistroke([1, 2]), vec![MetricAmount::new(0, 1.0)]),
         NstrokeData::new(Nstroke::Bistroke([2, 1]), vec![MetricAmount::new(0, 1.0)]),
-        NstrokeData::new(Nstroke::Bistroke([1, 2]), vec![MetricAmount::new(1, 1.0)]),
     ];
     let data = MetricData::from(metrics, strokes, 3);
 
     let layout = Layout {
-        matrix: "flhvz'wuoysrntkcdeaixjbmqpg,./"
+        matrix: "fsxlrjhnbvtmzkq'cpwdgue,oa.yi/"
+            // matrix: "qazwsxedcrfvtgbyhnujmik,ol.p"
             .chars()
             .map(|c| *corpus.corpus_char(c).unwrap())
             .collect(),
@@ -58,8 +61,8 @@ pub fn main() {
     println!("{:?}", analyzer.data.position_strokes);
 
     println!("{:?}", analyzer.stats);
-    analyzer.swap(0, Swap::new(0, 1));
+    analyzer.swap(0, Swap::new(0, 2));
     println!("{:?}", analyzer.stats);
-    analyzer.swap(0, Swap::new(0, 1));
+    analyzer.swap(0, Swap::new(0, 2));
     println!("{:?}", analyzer.stats);
 }

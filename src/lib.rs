@@ -295,41 +295,56 @@ impl Analyzer {
         let c_b = l.matrix[swap.b];
         let it1 = &mut self.data.position_strokes[swap.a].iter();
         let it2 = &mut self.data.position_strokes[swap.b].iter();
-        let mut last_a: usize = 0;
-        let mut last_b: usize = 0;
+        let mut stroke_a = None;
+        let mut stroke_b = None;
         loop {
-            let (s1, s2) = if last_a < last_b {
-                (it1.next(), None)
-            } else if last_b < last_a {
-                (None, it2.next())
-            } else {
-                (it1.next(), it2.next())
-            };
-
-            let stroke = match (s1, s2) {
-                (Some(a), Some(b)) => {
-                    last_a = *a;
-                    last_b = *b;
-                    if a < b {
-                        *a
+            let stroke = match (stroke_a, stroke_b) {
+                (None, None) => {
+                    stroke_a = it1.next();
+                    stroke_b = it2.next();
+                    if stroke_a.is_some() {
+                        stroke_a
+                    } else if stroke_b.is_some() {
+                        stroke_b
                     } else {
-                        *b
+                        break;
                     }
                 }
-                (Some(s), None) => {
-                    last_a = *s;
-                    *s
+                (None, Some(b)) => {
+                    stroke_b = it2.next();
+                    stroke_b
                 }
-                (None, Some(s)) => {
-                    last_b = *s;
-                    *s
+                (Some(a), None) => {
+                    stroke_a = it1.next();
+                    stroke_a
                 }
-                (None, None) => break,
+                (Some(a), Some(b)) => {
+                    if a < b {
+                        stroke_a = it1.next();
+                        stroke_a
+                    } else if b < a {
+                        stroke_b = it2.next();
+                        stroke_b
+                    } else {
+                        stroke_a = it1.next();
+                        stroke_b = it2.next();
+                        if stroke_a.is_some() {
+                            stroke_a
+                        } else if stroke_b.is_some() {
+                            stroke_b
+                        } else {
+                            break;
+                        }
+                    }
+                }
             };
 
-            // println!("strokes: {}, {}, [{}]", last_a, last_b, stroke);
+            let stroke = match stroke {
+                Some(s) => s,
+                None => break,
+            };
 
-            let data = &self.data.strokes[stroke];
+            let data = &self.data.strokes[*stroke];
             let ns = &data.nstroke;
             let basefreqs: [i32; 2] = [
                 l.frequency(&self.corpus, ns, None) as i32,
