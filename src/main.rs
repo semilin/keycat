@@ -36,8 +36,14 @@ pub fn main() {
         NstrokeData::new(Nstroke::Bistroke([2, 0]), vec![MetricAmount::new(0, 1.0)]),
         NstrokeData::new(Nstroke::Bistroke([1, 2]), vec![MetricAmount::new(0, 1.0)]),
         NstrokeData::new(Nstroke::Bistroke([2, 1]), vec![MetricAmount::new(0, 1.0)]),
+        NstrokeData::new(Nstroke::Bistroke([3, 4]), vec![MetricAmount::new(0, 1.0)]),
+        NstrokeData::new(Nstroke::Bistroke([4, 3]), vec![MetricAmount::new(0, 1.0)]),
+        NstrokeData::new(Nstroke::Bistroke([5, 3]), vec![MetricAmount::new(0, 1.0)]),
+        NstrokeData::new(Nstroke::Bistroke([3, 5]), vec![MetricAmount::new(0, 1.0)]),
+        NstrokeData::new(Nstroke::Bistroke([4, 5]), vec![MetricAmount::new(0, 1.0)]),
+        NstrokeData::new(Nstroke::Bistroke([5, 4]), vec![MetricAmount::new(0, 1.0)]),
     ];
-    let data = MetricData::from(metrics, strokes, 3);
+    let data = MetricData::from(metrics, strokes, 6);
 
     let layout = Layout {
         matrix: "fsxlrjhnbvtmzkq'cpwdgue,oa.yi/"
@@ -61,8 +67,8 @@ pub fn main() {
     println!("{:?}", analyzer.data.position_strokes);
 
     println!("{:?}", analyzer.stats);
-    analyzer.swap(0, Swap::new(0, 2));
+    analyzer.swap(0, Swap::new(1, 4));
     println!("{:?}", analyzer.stats);
-    analyzer.swap(0, Swap::new(0, 2));
+    analyzer.swap(0, Swap::new(1, 4));
     println!("{:?}", analyzer.stats);
 }

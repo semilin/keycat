@@ -298,51 +298,39 @@ impl Analyzer {
         let mut stroke_a = None;
         let mut stroke_b = None;
         loop {
-            let stroke = match (stroke_a, stroke_b) {
+            match (stroke_a, stroke_b) {
                 (None, None) => {
                     stroke_a = it1.next();
                     stroke_b = it2.next();
-                    if stroke_a.is_some() {
-                        stroke_a
-                    } else if stroke_b.is_some() {
-                        stroke_b
-                    } else {
-                        break;
-                    }
                 }
-                (None, Some(b)) => {
-                    stroke_b = it2.next();
-                    stroke_b
-                }
-                (Some(a), None) => {
+                (Some(_), None) => {
                     stroke_a = it1.next();
-                    stroke_a
+                }
+                (None, Some(_)) => {
+                    stroke_b = it2.next();
                 }
                 (Some(a), Some(b)) => {
                     if a < b {
                         stroke_a = it1.next();
-                        stroke_a
                     } else if b < a {
                         stroke_b = it2.next();
-                        stroke_b
                     } else {
                         stroke_a = it1.next();
                         stroke_b = it2.next();
-                        if stroke_a.is_some() {
-                            stroke_a
-                        } else if stroke_b.is_some() {
-                            stroke_b
-                        } else {
-                            break;
-                        }
                     }
                 }
             };
 
-            let stroke = match stroke {
-                Some(s) => s,
-                None => break,
+            let stroke = match (stroke_a, stroke_b) {
+                (None, None) => {
+                    break;
+                }
+                (Some(a), None) => a,
+                (None, Some(b)) => b,
+                (Some(a), Some(b)) => a.min(b),
             };
+
+            // println!("{:?} {:?} -> stroke {}", stroke_a, stroke_b, stroke);
 
             let data = &self.data.strokes[*stroke];
             let ns = &data.nstroke;
@@ -411,6 +399,7 @@ impl Analyzer {
                 } else {
                     basefreqs[1] - basefreqs[0]
                 } as f32;
+                println!("{: >8}", diff);
                 self.stats[amount.metric] += amount.amount * diff;
             }
         }
