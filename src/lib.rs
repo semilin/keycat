@@ -257,11 +257,13 @@ pub struct Analyzer {
     pub corpus: Corpus,
     pub layouts: Vec<Layout>,
     pub stats: Vec<f32>,
+    pub stat_diffs: Vec<f32>,
 }
 
 impl Analyzer {
     pub fn from(data: MetricData, corpus: Corpus, layout: Layout) -> Self {
-        let mut stats: Vec<f32> = vec![0.0; data.metrics.len()];
+        let num_metrics = data.metrics.len().clone();
+        let mut stats: Vec<f32> = vec![0.0; num_metrics];
 
         for stroke in &data.strokes {
             let ns = &stroke.nstroke;
@@ -286,8 +288,10 @@ impl Analyzer {
             corpus,
             layouts: vec![layout],
             stats,
+            stat_diffs: vec![0.0; num_metrics],
         }
     }
+    /// Makes a swap and updates stats.
     pub fn swap(&mut self, layout: usize, swap: Swap) {
         let corpus = &self.corpus;
         let l = &mut self.layouts[layout];
@@ -400,7 +404,9 @@ impl Analyzer {
                     basefreqs[1] - basefreqs[0]
                 } as f32;
                 // println!("{: >8}", diff);
-                self.stats[amount.metric] += amount.amount * diff;
+                let real_diff = amount.amount * diff;
+                self.stat_diffs[amount.metric] = real_diff;
+                self.stats[amount.metric] += real_diff;
             }
         }
         l.matrix.swap(swap.a, swap.b);
