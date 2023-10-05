@@ -291,7 +291,7 @@ impl Analyzer {
             stat_diffs: vec![0.0; num_metrics],
         }
     }
-    /// Makes a swap and updates stats.
+    /// Calculates the diff for a swap..
     pub fn swap_diff(&mut self, layout: usize, swap: &Swap) {
         let corpus = &self.corpus;
         let l = &mut self.layouts[layout];
@@ -410,7 +410,8 @@ impl Analyzer {
         }
     }
     /// Makes a swap on the given layout. If cached is true, uses the
-    /// already stored diff data to update metrics.
+    /// already stored diff data to update metrics. Otherwise, diff
+    /// data is calculated first.
     pub fn swap(&mut self, layout: usize, swap: &Swap, cached: bool) {
         if !cached {
             self.swap_diff(layout, swap);
