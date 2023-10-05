@@ -293,6 +293,10 @@ impl Analyzer {
     }
     /// Calculates the diff for a swap..
     pub fn swap_diff(&mut self, layout: usize, swap: &Swap) {
+        for diff in &mut self.stat_diffs {
+            *diff = 0.0;
+        }
+        
         let corpus = &self.corpus;
         let l = &mut self.layouts[layout];
         let c_a = l.matrix[swap.a];
@@ -405,7 +409,7 @@ impl Analyzer {
                 } as f32;
                 // println!("{: >8}", diff);
                 let real_diff = amount.amount * diff;
-                self.stat_diffs[amount.metric] = real_diff;
+                self.stat_diffs[amount.metric] += real_diff;
             }
         }
     }
