@@ -292,7 +292,7 @@ impl Analyzer {
         }
     }
     /// Makes a swap and updates stats.
-    pub fn swap(&mut self, layout: usize, swap: Swap) {
+    pub fn swap_diff(&mut self, layout: usize, swap: &Swap) {
         let corpus = &self.corpus;
         let l = &mut self.layouts[layout];
         let c_a = l.matrix[swap.a];
@@ -406,9 +406,19 @@ impl Analyzer {
                 // println!("{: >8}", diff);
                 let real_diff = amount.amount * diff;
                 self.stat_diffs[amount.metric] = real_diff;
-                self.stats[amount.metric] += real_diff;
             }
         }
+    }
+    /// Makes a swap on the given layout. If cached is true, uses the
+    /// already stored diff data to update metrics.
+    pub fn swap(&mut self, layout: usize, swap: &Swap, cached: bool) {
+        if !cached {
+            self.swap_diff(layout, swap);
+        }
+        for (i, diff) in self.stat_diffs.iter().enumerate() {
+            self.stats[i] += diff;
+        }
+        let l = &mut self.layouts[layout];
         l.matrix.swap(swap.a, swap.b);
     }
 }

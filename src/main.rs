@@ -66,9 +66,11 @@ pub fn main() {
     );
     println!("{:?}", analyzer.data.position_strokes);
 
+    let swap = Swap::new(1, 4);
+    
     println!("{:?}", analyzer.stats);
-    analyzer.swap(0, Swap::new(1, 4));
+    analyzer.swap(0, &swap, false);
     println!("{:?}", analyzer.stats);
-    analyzer.swap(0, Swap::new(1, 4));
+    analyzer.swap(0, &swap, false);
     println!("{:?}", analyzer.stats);
 }
