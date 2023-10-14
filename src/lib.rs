@@ -158,6 +158,16 @@ pub enum Nstroke {
     Tristroke([usize; 3]),
 }
 
+impl Nstroke {
+    pub fn to_vec(&self) -> Vec<usize> {
+	match self {
+	    Nstroke::Monostroke(u) => vec![*u],
+	    Nstroke::Bistroke(a) => a.to_vec(),
+	    Nstroke::Tristroke(a) => a.to_vec(),
+	}
+    }
+}
+
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Copy, Clone, Debug)]
 pub enum NgramType {
@@ -224,11 +234,7 @@ impl MetricData {
     pub fn from(metrics: Vec<NgramType>, strokes: Vec<NstrokeData>, num_positions: usize) -> Self {
         let mut position_strokes: Vec<Vec<NstrokeIndex>> = vec![vec![]; num_positions];
         for (i, stroke) in strokes.iter().map(|s| &s.nstroke).enumerate() {
-            for pos in match stroke {
-                Nstroke::Monostroke(v) => vec![*v],
-                Nstroke::Bistroke(a) => a.to_vec(),
-                Nstroke::Tristroke(a) => a.to_vec(),
-            } {
+            for pos in stroke.to_vec() {
                 position_strokes[pos].push(i);
             }
         }
