@@ -46,7 +46,7 @@ impl Corpus {
             skipgrams: vec![0; char_list.len() * char_list.len()],
             trigrams: vec![0; char_list.len() * char_list.len() * char_list.len()],
         };
-        for (i, chars) in c.char_list[1..].iter().enumerate() {
+        for (i, chars) in c.char_list.iter().enumerate() {
             for ch in chars.iter() {
                 c.char_map.insert(*ch, i);
             }
