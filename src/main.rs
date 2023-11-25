@@ -14,7 +14,7 @@ pub fn main() {
             vec!['/', '?'],
             vec!['\'', '\"'],
         ]);
-        Corpus::with_char_list(char_list)
+        Corpus::with_char_list(&mut char_list)
     };
 
     // println!("{:?}", corpus.char_list);

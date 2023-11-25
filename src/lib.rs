@@ -32,7 +32,12 @@ impl Corpus {
     ///         .collect::<Vec<Vec<char>>>()
     /// );
     /// ```
-    pub fn with_char_list(char_list: Vec<Vec<char>>) -> Self {
+    pub fn with_char_list(char_list: &mut Vec<Vec<char>>) -> Self {
+	let char_list = {
+	    let mut vec = vec![vec!['\0']];
+	    vec.append(char_list);
+	    vec
+	};
         let mut c = Corpus {
             char_map: HashMap::new(),
             char_list: char_list.clone(),
@@ -41,7 +46,7 @@ impl Corpus {
             skipgrams: vec![0; char_list.len() * char_list.len()],
             trigrams: vec![0; char_list.len() * char_list.len() * char_list.len()],
         };
-        for (i, chars) in c.char_list.iter().enumerate() {
+        for (i, chars) in c.char_list[1..].iter().enumerate() {
             for ch in chars.iter() {
                 c.char_map.insert(*ch, i);
             }
