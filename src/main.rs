@@ -49,7 +49,7 @@ pub fn main() {
         matrix: "fsxlrjhnbvtmzkq'cpwdgue,oa.yi/"
             // matrix: "qazwsxedcrfvtgbyhnujmik,ol.p"
             .chars()
-            .map(|c| *corpus.corpus_char(c).unwrap())
+            .map(|c| *corpus.corpus_char(c))
             .collect(),
     };
 

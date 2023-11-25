@@ -73,8 +73,8 @@ impl Corpus {
             self.char_list[c3][0],
         ]
     }
-    pub fn corpus_char(&self, c: char) -> Option<&CorpusChar> {
-        self.char_map.get(&c)
+    pub fn corpus_char(&self, c: char) -> &CorpusChar {
+        self.char_map.get(&c).unwrap_or(&0)
     }
     pub fn bigram_idx(&self, c1: CorpusChar, c2: CorpusChar) -> CorpusIndex {
         let len = self.char_list.len();
