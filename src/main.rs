@@ -2,6 +2,8 @@ use keycat::{
     Analyzer, Corpus, Layout, MetricAmount, MetricData, NgramType, Nstroke, NstrokeData,
 };
 
+use keycat::opt::{Optimizer, AnnealingOptimizer, Scoring};
+
 pub fn main() {
     let mut corpus = {
         let mut char_list = "abcdefghijklmnopqrstuvwxyz"
@@ -43,7 +45,7 @@ pub fn main() {
         NstrokeData::new(Nstroke::Bistroke([4, 5]), vec![MetricAmount::new(0, 1.0)]),
         NstrokeData::new(Nstroke::Bistroke([5, 4]), vec![MetricAmount::new(0, 1.0)]),
     ];
-    let data = MetricData::from(metrics, strokes, 6);
+    let data = MetricData::from(metrics, strokes, 30);
 
     let layout = Layout {
         matrix: "fsxlrjhnbvtmzkq'cpwdgue,oa.yi/"
@@ -65,6 +67,12 @@ pub fn main() {
             .collect::<Vec<_>>()
     );
     println!("{:?}", analyzer.data.position_strokes);
+
+    let mut optimizer = AnnealingOptimizer::new(100, -0.001);
+    optimizer.setup(layout.clone());
+    optimizer.run(&analyzer, &Scoring {
+	weights: vec![(0, 1.0)]
+    });
 
     let mut stats = vec![0.0; analyzer.data.metrics.len()];
     stats = analyzer.calc_stats(stats, &layout);

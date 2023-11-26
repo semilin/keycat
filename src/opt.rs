@@ -70,8 +70,8 @@ impl Optimizer for AnnealingOptimizer {
                 for val in &mut diffs {
                     *val = 0.0;
                 }
-		temp -= self.temp_decrement;
-            }
+		temp += self.temp_decrement;
+	    }
         });
         let mut layouts: Vec<(Layout, f32)> = self
             .layouts
