@@ -32,6 +32,16 @@ pub struct AnnealingOptimizer {
     pub temp_decrement: f64,
 }
 
+impl AnnealingOptimizer {
+    pub fn new(population_size: usize, temp_decrement: f64) -> Self {
+	Self {
+	    layouts: vec![],
+	    population_size,
+	    temp_decrement,
+	}
+    }
+}
+
 impl Optimizer for AnnealingOptimizer {
     fn setup(&mut self, l: Layout) {
         let mut rng = thread_rng();
