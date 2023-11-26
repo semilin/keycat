@@ -59,7 +59,7 @@ impl Optimizer for AnnealingOptimizer {
             let possible_swaps: Vec<Swap> = (0..l.matrix.len())
 		.flat_map(|a| (0..l.matrix.len()).map(move |b| Swap::new(a, b)))
                 .collect();
-            let temp: f64 = 1.0;
+            let mut temp: f64 = 1.0;
             while temp >= 0.0 {
                 let swap = possible_swaps.choose(&mut rng).unwrap();
                 diffs = analyzer.swap_diff(diffs, l, swap);
@@ -70,6 +70,7 @@ impl Optimizer for AnnealingOptimizer {
                 for val in &mut diffs {
                     *val = 0.0;
                 }
+		temp -= self.temp_decrement;
             }
         });
         let mut layouts: Vec<(Layout, f32)> = self
