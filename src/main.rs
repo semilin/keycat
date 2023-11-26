@@ -68,7 +68,7 @@ pub fn main() {
     );
     println!("{:?}", analyzer.data.position_strokes);
 
-    let mut optimizer = AnnealingOptimizer::new(100, -0.001);
+    let mut optimizer = AnnealingOptimizer::new(100, -0.001).pin(vec![0]);
     optimizer.setup(layout.clone());
     optimizer.run(&analyzer, &Scoring {
 	weights: vec![(0, 1.0)]

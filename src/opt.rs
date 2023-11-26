@@ -18,6 +18,7 @@ impl Scoring {
 pub trait Optimizer {
     /// Prepares the optimizer for running.
     fn setup(&mut self, l: Layout);
+    fn pin(self, pins: Vec<usize>) -> Self;
     /// Runs the optimization for as long as needed.
     fn run(&mut self, analyzer: &Analyzer, scoring: &Scoring) -> Vec<(Layout, f32)>;
 }
@@ -26,6 +27,7 @@ pub trait Optimizer {
 /// population_size.
 pub struct AnnealingOptimizer {
     layouts: Vec<Layout>,
+    pins: Vec<usize>,
     /// The number of layouts to be optimized in parallel.
     pub population_size: usize,
     /// The amount the temperature should decrease per step.
@@ -34,11 +36,12 @@ pub struct AnnealingOptimizer {
 
 impl AnnealingOptimizer {
     pub fn new(population_size: usize, temp_decrement: f64) -> Self {
-	Self {
-	    layouts: vec![],
-	    population_size,
-	    temp_decrement,
-	}
+        Self {
+            layouts: vec![],
+            pins: vec![],
+            population_size,
+            temp_decrement,
+        }
     }
 }
 
@@ -52,12 +55,18 @@ impl Optimizer for AnnealingOptimizer {
         });
     }
 
+    fn pin(mut self, pins: Vec<usize>) -> Self {
+        self.pins = pins;
+        self
+    }
+
     fn run(&mut self, analyzer: &Analyzer, scoring: &Scoring) -> Vec<(Layout, f32)> {
         self.layouts.par_iter_mut().for_each(|l| {
             let mut diffs = vec![0.0; analyzer.data.metrics.len()];
             let mut rng = rand::thread_rng();
             let possible_swaps: Vec<Swap> = (0..l.matrix.len())
-		.flat_map(|a| (0..l.matrix.len()).map(move |b| Swap::new(a, b)))
+                .flat_map(|a| (0..l.matrix.len()).map(move |b| Swap::new(a, b)))
+                .filter(|swap| !self.pins.iter().any(|p| *p == swap.a || *p == swap.b))
                 .collect();
             let mut temp: f64 = 1.0;
             while temp >= 0.0 {
@@ -70,8 +79,8 @@ impl Optimizer for AnnealingOptimizer {
                 for val in &mut diffs {
                     *val = 0.0;
                 }
-		temp += self.temp_decrement;
-	    }
+                temp += self.temp_decrement;
+            }
         });
         let mut layouts: Vec<(Layout, f32)> = self
             .layouts
