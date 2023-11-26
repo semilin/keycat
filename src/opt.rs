@@ -56,10 +56,8 @@ impl Optimizer for AnnealingOptimizer {
         self.layouts.par_iter_mut().for_each(|l| {
             let mut diffs = vec![0.0; analyzer.data.metrics.len()];
             let mut rng = rand::thread_rng();
-            let possible_swaps: Vec<Swap> = l
-                .matrix
-                .iter()
-                .flat_map(|a| l.matrix.iter().map(move |b| Swap::new(*a, *b)))
+            let possible_swaps: Vec<Swap> = (0..l.matrix.len())
+		.flat_map(|a| (0..l.matrix.len()).map(move |b| Swap::new(a, b)))
                 .collect();
             let temp: f64 = 1.0;
             while temp >= 0.0 {
