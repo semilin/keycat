@@ -1,3 +1,5 @@
+#[cfg(feature = "opt")]
+pub mod opt;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -26,18 +28,18 @@ impl Corpus {
     /// ```rust
     /// use keycat::Corpus;
     /// let mut corpus = Corpus::with_char_list(
-    ///     "abcdefghijklmnopqrstuvwxyz"
+    ///     &mut "abcdefghijklmnopqrstuvwxyz"
     ///         .chars()
     ///         .map(|c| vec![c, c.to_uppercase().next().unwrap()])
     ///         .collect::<Vec<Vec<char>>>()
     /// );
     /// ```
     pub fn with_char_list(char_list: &mut Vec<Vec<char>>) -> Self {
-	let char_list = {
-	    let mut vec = vec![vec!['\0']];
-	    vec.append(char_list);
-	    vec
-	};
+        let char_list = {
+            let mut vec = vec![vec!['\0']];
+            vec.append(char_list);
+            vec
+        };
         let mut c = Corpus {
             char_map: HashMap::new(),
             char_list: char_list.clone(),
@@ -153,6 +155,9 @@ impl Layout {
     pub fn total_char_count(&self, corpus: &Corpus) -> u32 {
         self.matrix.iter().map(|c| corpus.chars[*c]).sum()
     }
+    pub fn swap(&mut self, s: &Swap) {
+	self.matrix.swap(s.a, s.b);
+    }
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(untagged))]
@@ -165,11 +170,11 @@ pub enum Nstroke {
 
 impl Nstroke {
     pub fn to_vec(&self) -> Vec<usize> {
-	match self {
-	    Nstroke::Monostroke(u) => vec![*u],
-	    Nstroke::Bistroke(a) => a.to_vec(),
-	    Nstroke::Tristroke(a) => a.to_vec(),
-	}
+        match self {
+            Nstroke::Monostroke(u) => vec![*u],
+            Nstroke::Bistroke(a) => a.to_vec(),
+            Nstroke::Tristroke(a) => a.to_vec(),
+        }
     }
 }
 
@@ -266,26 +271,28 @@ impl Swap {
 pub struct Analyzer {
     pub data: MetricData,
     pub corpus: Corpus,
-    pub layouts: Vec<Layout>,
-    pub stats: Vec<f32>,
-    pub stat_diffs: Vec<f32>,
 }
 
 impl Analyzer {
-    pub fn from(data: MetricData, corpus: Corpus, layout: Layout) -> Self {
-        let num_metrics = data.metrics.len().clone();
-        let mut stats: Vec<f32> = vec![0.0; num_metrics];
+    pub fn from(data: MetricData, corpus: Corpus) -> Self {
+	let analyzer = Self {
+            data,
+            corpus,
+	};
 
-        for stroke in &data.strokes {
+	analyzer
+    }
+    pub fn calc_stats(&self, mut stats: Vec<f32>, l: &Layout) -> Vec<f32> {
+	for stroke in &self.data.strokes {
             let ns = &stroke.nstroke;
-            let basefreq = layout.frequency(&corpus, ns, None);
+            let basefreq = l.frequency(&self.corpus, ns, None);
             let skipfreq = match ns {
-                Nstroke::Bistroke(_) => layout.frequency(&corpus, ns, Some(NgramType::Skipgram)),
+                Nstroke::Bistroke(_) => l.frequency(&self.corpus, ns, Some(NgramType::Skipgram)),
                 _ => 0,
             };
 
             for amount in &stroke.amounts {
-                let freq = if let NgramType::Skipgram = data.metrics[amount.metric] {
+                let freq = if let NgramType::Skipgram = &self.data.metrics[amount.metric] {
                     skipfreq
                 } else {
                     basefreq
@@ -293,24 +300,13 @@ impl Analyzer {
                 stats[amount.metric] += freq as f32 * amount.amount;
             }
         }
-
-        Self {
-            data,
-            corpus,
-            layouts: vec![layout],
-            stats,
-            stat_diffs: vec![0.0; num_metrics],
-        }
+	stats
     }
-    /// Calculates the diff for a swap..
-    pub fn swap_diff(&mut self, layout: usize, swap: &Swap) {
-        for diff in &mut self.stat_diffs {
-            *diff = 0.0;
-        }
-        
-        let corpus = &self.corpus;
-        let l = &mut self.layouts[layout];
-        let c_a = l.matrix[swap.a];
+
+    /// Calculates the diff for a swap.
+    pub fn swap_diff(&self, mut diffs: Vec<f32>, l: &Layout, swap: &Swap) -> Vec<f32> {
+	let corpus = &self.corpus;
+	let c_a = l.matrix[swap.a];
         let c_b = l.matrix[swap.b];
         let it1 = &mut self.data.position_strokes[swap.a].iter();
         let it2 = &mut self.data.position_strokes[swap.b].iter();
@@ -420,21 +416,9 @@ impl Analyzer {
                 } as f32;
                 // println!("{: >8}", diff);
                 let real_diff = amount.amount * diff;
-                self.stat_diffs[amount.metric] += real_diff;
+                diffs[amount.metric] += real_diff;
             }
         }
-    }
-    /// Makes a swap on the given layout. If cached is true, uses the
-    /// already stored diff data to update metrics. Otherwise, diff
-    /// data is calculated first.
-    pub fn swap(&mut self, layout: usize, swap: &Swap, cached: bool) {
-        if !cached {
-            self.swap_diff(layout, swap);
-        }
-        for (i, diff) in self.stat_diffs.iter().enumerate() {
-            self.stats[i] += diff;
-        }
-        let l = &mut self.layouts[layout];
-        l.matrix.swap(swap.a, swap.b);
+	diffs
     }
 }

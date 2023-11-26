@@ -1,5 +1,5 @@
 use keycat::{
-    Analyzer, Corpus, Layout, MetricAmount, MetricData, NgramType, Nstroke, NstrokeData, Swap,
+    Analyzer, Corpus, Layout, MetricAmount, MetricData, NgramType, Nstroke, NstrokeData,
 };
 
 pub fn main() {
@@ -53,7 +53,7 @@ pub fn main() {
             .collect(),
     };
 
-    let mut analyzer = Analyzer::from(data, corpus, layout);
+    let analyzer = Analyzer::from(data, corpus);
 
     println!(
         "{:?}",
@@ -66,11 +66,7 @@ pub fn main() {
     );
     println!("{:?}", analyzer.data.position_strokes);
 
-    let swap = Swap::new(1, 4);
-    
-    println!("{:?}", analyzer.stats);
-    analyzer.swap(0, &swap, false);
-    println!("{:?}", analyzer.stats);
-    analyzer.swap(0, &swap, false);
-    println!("{:?}", analyzer.stats);
+    let mut stats = vec![0.0; analyzer.data.metrics.len()];
+    stats = analyzer.calc_stats(stats, &layout);
+    println!("{:?}", stats);
 }
