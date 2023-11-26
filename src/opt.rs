@@ -1,0 +1,80 @@
+use crate::{Analyzer, Layout, Swap};
+use rand::prelude::*;
+use rand::thread_rng;
+use rayon::prelude::*;
+
+pub struct Scoring {
+    pub weights: Vec<(usize, f32)>,
+}
+
+impl Scoring {
+    pub fn score(&self, diff: &[f32]) -> f32 {
+        self.weights
+            .iter()
+            .fold(0.0, |acc, (i, weight)| acc + (weight * diff[*i]))
+    }
+}
+
+pub trait Optimizer {
+    /// Prepares the optimizer for running.
+    fn setup(&mut self, l: Layout);
+    /// Runs the optimization for as long as needed.
+    fn run(&mut self, analyzer: &Analyzer, scoring: &Scoring) -> Vec<(Layout, f32)>;
+}
+
+/// An Optimizer that runs simulated annealing on a pool of size
+/// population_size.
+pub struct AnnealingOptimizer {
+    layouts: Vec<Layout>,
+    /// The number of layouts to be optimized in parallel.
+    pub population_size: usize,
+    /// The amount the temperature should decrease per step.
+    pub temp_decrement: f64,
+}
+
+impl Optimizer for AnnealingOptimizer {
+    fn setup(&mut self, l: Layout) {
+        let mut rng = thread_rng();
+        self.layouts.resize(self.population_size, l);
+
+        self.layouts.iter_mut().for_each(|l| {
+            l.matrix.shuffle(&mut rng);
+        });
+    }
+
+    fn run(&mut self, analyzer: &Analyzer, scoring: &Scoring) -> Vec<(Layout, f32)> {
+        self.layouts.par_iter_mut().for_each(|l| {
+            let mut diffs = vec![0.0; analyzer.data.metrics.len()];
+            let mut rng = rand::thread_rng();
+            let possible_swaps: Vec<Swap> = l
+                .matrix
+                .iter()
+                .flat_map(|a| l.matrix.iter().map(move |b| Swap::new(*a, *b)))
+                .collect();
+            let temp: f64 = 1.0;
+            while temp >= 0.0 {
+                let swap = possible_swaps.choose(&mut rng).unwrap();
+                diffs = analyzer.swap_diff(diffs, l, swap);
+                let diff = scoring.score(&diffs);
+                if diff < 0.0 || rng.gen::<f64>() < temp {
+                    l.swap(swap);
+                }
+                for val in &mut diffs {
+                    *val = 0.0;
+                }
+            }
+        });
+        let mut layouts: Vec<(Layout, f32)> = self
+            .layouts
+            .par_iter()
+            .map(|l| {
+                (
+                    l.clone(),
+                    scoring.score(&analyzer.calc_stats(vec![0.0; analyzer.data.metrics.len()], l)),
+                )
+            })
+            .collect();
+        layouts.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+        layouts
+    }
+}
