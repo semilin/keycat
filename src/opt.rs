@@ -37,7 +37,7 @@ pub struct AnnealingOptimizer {
 impl AnnealingOptimizer {
     pub fn new(population_size: usize, temp_decrement: f64) -> Self {
         Self {
-            layouts: vec![],
+            layouts: Vec::with_capacity(population_size),
             pins: vec![],
             population_size,
             temp_decrement,
@@ -49,10 +49,6 @@ impl Optimizer for AnnealingOptimizer {
     fn setup(&mut self, l: Layout) {
         let mut rng = thread_rng();
         self.layouts.resize(self.population_size, l);
-
-        self.layouts.iter_mut().for_each(|l| {
-            l.matrix.shuffle(&mut rng);
-        });
     }
 
     fn pin(mut self, pins: Vec<usize>) -> Self {
