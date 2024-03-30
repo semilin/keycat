@@ -1,4 +1,5 @@
 use crate::{Corpus, Layout, NgramType, Nstroke, Swap};
+use std::cmp::Ordering;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -80,9 +81,7 @@ pub struct Analyzer {
 
 impl Analyzer {
     pub fn from(data: MetricData, corpus: Corpus) -> Self {
-        let analyzer = Self { data, corpus };
-
-        analyzer
+        Self { data, corpus }
     }
     pub fn calc_stats(&self, mut stats: Vec<f32>, l: &Layout) -> Vec<f32> {
         for stroke in &self.data.strokes {
@@ -126,16 +125,18 @@ impl Analyzer {
                 (None, Some(_)) => {
                     stroke_b = it2.next();
                 }
-                (Some(a), Some(b)) => {
-                    if a < b {
-                        stroke_a = it1.next();
-                    } else if b < a {
-                        stroke_b = it2.next();
-                    } else {
-                        stroke_a = it1.next();
-                        stroke_b = it2.next();
+                (Some(a), Some(b)) => match a.cmp(b) {
+                    Ordering::Less => {
+                        it1.next();
                     }
-                }
+                    Ordering::Greater => {
+                        it2.next();
+                    }
+                    Ordering::Equal => {
+                        it1.next();
+                        it2.next();
+                    }
+                },
             };
 
             let stroke = match (stroke_a, stroke_b) {
@@ -188,9 +189,8 @@ impl Analyzer {
                 } as i32,
             ];
             let skipfreqs: [i32; 2] = match ns {
-                Nstroke::Bistroke(arr) => [
-                    l.frequency(&corpus, ns, Some(NgramType::Skipgram)) as i32,
-                    {
+                Nstroke::Bistroke(arr) => {
+                    [l.frequency(corpus, ns, Some(NgramType::Skipgram)) as i32, {
                         let [a, b]: [usize; 2] = arr.map(|p| {
                             if p == swap.a {
                                 c_b
@@ -201,8 +201,8 @@ impl Analyzer {
                             }
                         });
                         corpus.skipgrams[corpus.bigram_idx(a, b)] as i32
-                    },
-                ],
+                    }]
+                }
                 _ => [0, 0],
             };
 

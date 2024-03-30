@@ -109,10 +109,10 @@ impl Corpus {
     /// Processes a string and adds its ngram frequencies to the
     /// Corpus.
     pub fn add_str(&mut self, s: &str) {
-        let mut iter = s.chars().map(|c| self.char_map.get(&c));
+        let iter = s.chars().map(|c| self.char_map.get(&c));
         // extremely gross fix later
         let mut trigram: Vec<Option<&CorpusChar>> = vec![None, None, None];
-        while let Some(c) = iter.next() {
+        for c in iter {
             trigram.rotate_left(1);
             trigram[2] = c;
             if let Some(c3) = trigram[2] {
