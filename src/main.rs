@@ -1,9 +1,9 @@
 use keycat::{
+    analysis::{Analyzer, MetricAmount, MetricData, NstrokeData},
     Corpus, Layout, NgramType, Nstroke,
-    analysis::{Analyzer, MetricAmount, MetricData, NstrokeData}
 };
 
-use keycat::opt::{Optimizer, AnnealingOptimizer, Scoring};
+use keycat::opt::{AnnealingOptimizer, Optimizer, Scoring};
 
 pub fn main() {
     let mut corpus = {
@@ -17,7 +17,7 @@ pub fn main() {
             vec!['/', '?'],
             vec!['\'', '\"'],
         ]);
-        Corpus::with_char_list(&mut char_list)
+        Corpus::with_char_list(char_list)
     };
 
     // println!("{:?}", corpus.char_list);
@@ -52,7 +52,7 @@ pub fn main() {
         matrix: "fsxlrjhnbvtmzkq'cpwdgue,oa.yi/"
             // matrix: "qazwsxedcrfvtgbyhnujmik,ol.p"
             .chars()
-            .map(|c| *corpus.corpus_char(c))
+            .map(|c| corpus.corpus_char(c))
             .collect(),
     };
 
@@ -71,9 +71,12 @@ pub fn main() {
 
     let mut optimizer = AnnealingOptimizer::new(100, -0.001).pin(vec![0]);
     optimizer.setup(layout.clone());
-    optimizer.run(&analyzer, &Scoring {
-	weights: vec![(0, 1.0)]
-    });
+    optimizer.run(
+        &analyzer,
+        &Scoring {
+            weights: vec![(0, 1.0)],
+        },
+    );
 
     let mut stats = vec![0.0; analyzer.data.metrics.len()];
     stats = analyzer.calc_stats(stats, &layout);

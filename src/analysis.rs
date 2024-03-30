@@ -1,4 +1,4 @@
-use crate::{Layout, Swap, Nstroke, Corpus, NgramType};
+use crate::{Corpus, Layout, NgramType, Nstroke, Swap};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -51,7 +51,8 @@ pub struct MetricData {
 
 impl MetricData {
     /// ```rust
-    /// use keycat::{NgramType, Nstroke, NstrokeData, MetricAmount, MetricData};
+    /// use keycat::{NgramType, Nstroke};
+    /// use keycat::analysis::{NstrokeData, MetricAmount, MetricData};
     /// let metrics = vec![NgramType::Bigram];
     /// let strokes = vec![NstrokeData::new(Nstroke::Bistroke([0, 1]),
     ///                                     vec![MetricAmount::new(0, 0.0)])];
@@ -79,15 +80,12 @@ pub struct Analyzer {
 
 impl Analyzer {
     pub fn from(data: MetricData, corpus: Corpus) -> Self {
-	let analyzer = Self {
-            data,
-            corpus,
-	};
+        let analyzer = Self { data, corpus };
 
-	analyzer
+        analyzer
     }
     pub fn calc_stats(&self, mut stats: Vec<f32>, l: &Layout) -> Vec<f32> {
-	for stroke in &self.data.strokes {
+        for stroke in &self.data.strokes {
             let ns = &stroke.nstroke;
             let basefreq = l.frequency(&self.corpus, ns, None);
             let skipfreq = match ns {
@@ -104,13 +102,13 @@ impl Analyzer {
                 stats[amount.metric] += freq as f32 * amount.amount;
             }
         }
-	stats
+        stats
     }
 
     /// Calculates the diff for a swap.
     pub fn swap_diff(&self, mut diffs: Vec<f32>, l: &Layout, swap: &Swap) -> Vec<f32> {
-	let corpus = &self.corpus;
-	let c_a = l.matrix[swap.a];
+        let corpus = &self.corpus;
+        let c_a = l.matrix[swap.a];
         let c_b = l.matrix[swap.b];
         let it1 = &mut self.data.position_strokes[swap.a].iter();
         let it2 = &mut self.data.position_strokes[swap.b].iter();
@@ -219,6 +217,6 @@ impl Analyzer {
                 diffs[amount.metric] += real_diff;
             }
         }
-	diffs
+        diffs
     }
 }

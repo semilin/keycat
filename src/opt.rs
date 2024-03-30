@@ -1,4 +1,4 @@
-use crate::{Layout, Swap, analysis::Analyzer};
+use crate::{analysis::Analyzer, Layout, Swap};
 use rand::prelude::*;
 use rand::thread_rng;
 use rayon::prelude::*;

@@ -44,7 +44,7 @@ impl Layout {
         self.matrix.iter().map(|c| corpus.chars[*c]).sum()
     }
     pub fn swap(&mut self, s: &Swap) {
-	self.matrix.swap(s.a, s.b);
+        self.matrix.swap(s.a, s.b);
     }
 }
 
@@ -77,4 +77,3 @@ impl Swap {
         Self { a, b }
     }
 }
-
