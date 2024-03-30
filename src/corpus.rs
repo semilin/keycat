@@ -133,7 +133,7 @@ impl Corpus {
     pub fn add_file<P: AsRef<Path>>(&mut self, path: P) -> io::Result<()> {
         let file = File::open(path)?;
         let lines = BufReader::new(file).lines();
-        lines.flatten().for_each(|l| self.add_str(&l));
+        lines.map_while(Result::ok).for_each(|l| self.add_str(&l));
         Ok(())
     }
 }
