@@ -7,6 +7,7 @@ pub struct Scoring {
 }
 
 impl Scoring {
+    #[must_use]
     pub fn score(&self, diff: &[f32]) -> f32 {
         self.weights
             .iter()
@@ -17,13 +18,14 @@ impl Scoring {
 pub trait Optimizer {
     /// Prepares the optimizer for running.
     fn setup(&mut self, l: Layout);
+    #[must_use]
     fn pin(self, pins: Vec<usize>) -> Self;
     /// Runs the optimization for as long as needed.
     fn run(&mut self, analyzer: &Analyzer, scoring: &Scoring) -> Vec<(Layout, f32)>;
 }
 
-/// An Optimizer that runs simulated annealing on a pool of size
-/// population_size.
+/// An `Optimizer` that runs simulated annealing on a pool of size
+/// `population_size`.
 pub struct AnnealingOptimizer {
     layouts: Vec<Layout>,
     pins: Vec<usize>,
@@ -34,6 +36,7 @@ pub struct AnnealingOptimizer {
 }
 
 impl AnnealingOptimizer {
+    #[must_use]
     pub fn new(population_size: usize, temp_decrement: f64) -> Self {
         Self {
             layouts: Vec::with_capacity(population_size),

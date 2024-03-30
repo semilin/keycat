@@ -14,6 +14,7 @@ pub struct Layout {
 }
 
 impl Layout {
+    #[must_use]
     pub fn nstroke_chars(&self, ns: &Nstroke) -> Vec<CorpusChar> {
         match ns {
             Nstroke::Monostroke(idx) => vec![self.matrix[*idx]],
@@ -21,6 +22,7 @@ impl Layout {
             Nstroke::Tristroke(idx) => idx.iter().map(|p| self.matrix[*p]).collect(),
         }
     }
+    #[must_use]
     pub fn frequency(&self, corpus: &Corpus, ns: &Nstroke, ng: Option<NgramType>) -> u32 {
         match ns {
             Nstroke::Monostroke(idx) => corpus.chars[self.matrix[*idx]],
@@ -40,6 +42,7 @@ impl Layout {
             }
         }
     }
+    #[must_use]
     pub fn total_char_count(&self, corpus: &Corpus) -> u32 {
         self.matrix.iter().map(|c| corpus.chars[*c]).sum()
     }
@@ -57,6 +60,7 @@ pub enum Nstroke {
 }
 
 impl Nstroke {
+    #[must_use]
     pub fn to_vec(&self) -> Vec<usize> {
         match self {
             Nstroke::Monostroke(u) => vec![*u],
@@ -73,6 +77,7 @@ pub struct Swap {
 }
 
 impl Swap {
+    #[must_use]
     pub fn new(a: usize, b: usize) -> Self {
         Self { a, b }
     }

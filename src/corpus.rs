@@ -39,6 +39,7 @@ impl Corpus {
     ///         .collect::<Vec<Vec<char>>>()
     /// );
     /// ```
+    #[must_use]
     pub fn with_char_list(mut char_list: Vec<Vec<char>>) -> Self {
         let char_list = {
             let mut vec = vec![vec!['\0']];
@@ -54,13 +55,13 @@ impl Corpus {
             trigrams: vec![0; char_list.len() * char_list.len() * char_list.len()],
         };
         for (i, chars) in c.char_list.iter().enumerate() {
-            for ch in chars.iter() {
+            for ch in chars {
                 c.char_map.insert(*ch, i);
             }
         }
         c
     }
-    /// Converts a CorpusIndex back into its original character. This
+    /// Converts a `CorpusIndex` back into its original `char`. This
     /// doesn't start at 0, but 1. Index 0 is reserved as a null
     /// character for positions that may not exist on the layout.
     ///
@@ -74,15 +75,18 @@ impl Corpus {
     /// assert_eq!('b', corpus.uncorpus_unigram(2));
     /// assert_eq!('z', corpus.uncorpus_unigram(26));
     /// ```
+    #[must_use]
     pub fn uncorpus_unigram(&self, unigram: CorpusIndex) -> char {
         self.char_list[unigram][0]
     }
+    #[must_use]
     pub fn uncorpus_bigram(&self, bigram: CorpusIndex) -> Vec<char> {
         let len = self.char_list.len();
         let c1 = bigram / len;
         let c2 = bigram % len;
         vec![self.char_list[c1][0], self.char_list[c2][0]]
     }
+    #[must_use]
     pub fn uncorpus_trigram(&self, trigram: CorpusIndex) -> Vec<char> {
         let len = self.char_list.len();
         let c1 = trigram / len.pow(2);
@@ -94,20 +98,23 @@ impl Corpus {
             self.char_list[c3][0],
         ]
     }
-    /// Converts a char to its corresponding index in the corpus.
+    /// Converts a `char` to its corresponding index in the `Corpus`.
+    #[must_use]
     pub fn corpus_char(&self, c: char) -> CorpusChar {
         *self.char_map.get(&c).unwrap_or(&0)
     }
+    #[must_use]
     pub fn bigram_idx(&self, c1: CorpusChar, c2: CorpusChar) -> CorpusIndex {
         let len = self.char_list.len();
         (c1 * len) + c2
     }
+    #[must_use]
     pub fn trigram_idx(&self, c1: CorpusChar, c2: CorpusChar, c3: CorpusChar) -> CorpusIndex {
         let len = self.char_list.len();
         (c1 * len * len) + (c2 * len) + c3
     }
     /// Processes a string and adds its ngram frequencies to the
-    /// Corpus.
+    /// `Corpus`.
     pub fn add_str(&mut self, s: &str) {
         let iter = s.chars().map(|c| self.char_map.get(&c));
         // extremely gross fix later

@@ -17,6 +17,7 @@ pub struct MetricAmount {
 }
 
 impl MetricAmount {
+    #[must_use]
     pub fn new(metric: MetricIndex, amount: f32) -> Self {
         Self { metric, amount }
     }
@@ -32,6 +33,7 @@ pub struct NstrokeData {
 }
 
 impl NstrokeData {
+    #[must_use]
     pub fn new(nstroke: Nstroke, amounts: Vec<MetricAmount>) -> Self {
         Self { nstroke, amounts }
     }
@@ -59,6 +61,7 @@ impl MetricData {
     ///                                     vec![MetricAmount::new(0, 0.0)])];
     /// let data = MetricData::from(metrics, strokes, 2);
     /// ```
+    #[must_use]
     pub fn from(metrics: Vec<NgramType>, strokes: Vec<NstrokeData>, num_positions: usize) -> Self {
         let mut position_strokes: Vec<Vec<NstrokeIndex>> = vec![vec![]; num_positions];
         for (i, stroke) in strokes.iter().map(|s| &s.nstroke).enumerate() {
@@ -80,9 +83,11 @@ pub struct Analyzer {
 }
 
 impl Analyzer {
+    #[must_use]
     pub fn from(data: MetricData, corpus: Corpus) -> Self {
         Self { data, corpus }
     }
+    #[must_use]
     pub fn calc_stats(&self, mut stats: Vec<f32>, l: &Layout) -> Vec<f32> {
         for stroke in &self.data.strokes {
             let ns = &stroke.nstroke;
@@ -104,7 +109,8 @@ impl Analyzer {
         stats
     }
 
-    /// Calculates the diff for a swap.
+    /// Calculates the diff for a `Swap`.
+    #[must_use]
     pub fn swap_diff(&self, mut diffs: Vec<f32>, l: &Layout, swap: &Swap) -> Vec<f32> {
         let corpus = &self.corpus;
         let c_a = l.matrix[swap.a];
