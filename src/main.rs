@@ -1,5 +1,6 @@
 use keycat::{
-    Analyzer, Corpus, Layout, MetricAmount, MetricData, NgramType, Nstroke, NstrokeData,
+    Corpus, Layout, NgramType, Nstroke,
+    analysis::{Analyzer, MetricAmount, MetricData, NstrokeData}
 };
 
 use keycat::opt::{Optimizer, AnnealingOptimizer, Scoring};
