@@ -1,6 +1,5 @@
 use crate::{analysis::Analyzer, Layout, Swap};
 use rand::prelude::*;
-use rand::thread_rng;
 use rayon::prelude::*;
 
 pub struct Scoring {
@@ -47,7 +46,6 @@ impl AnnealingOptimizer {
 
 impl Optimizer for AnnealingOptimizer {
     fn setup(&mut self, l: Layout) {
-        let mut rng = thread_rng();
         self.layouts.resize(self.population_size, l);
     }
 
