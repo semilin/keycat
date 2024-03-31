@@ -82,7 +82,17 @@ pub struct Analyzer {
     pub corpus: Corpus,
 }
 
+#[allow(clippy::cast_precision_loss)]
 impl Analyzer {
+    #[allow(clippy::cast_possible_wrap)]
+    fn diff_freqs(a: u32, b: u32) -> i32 {
+        match a.cmp(&b) {
+            Ordering::Greater => (a - b) as i32,
+            Ordering::Less => -((b - a) as i32),
+            Ordering::Equal => 0,
+        }
+    }
+
     #[must_use]
     pub fn from(data: MetricData, corpus: Corpus) -> Self {
         Self { data, corpus }
@@ -133,14 +143,14 @@ impl Analyzer {
                 }
                 (Some(a), Some(b)) => match a.cmp(b) {
                     Ordering::Less => {
-                        it1.next();
+                        stroke_a = it1.next();
                     }
                     Ordering::Greater => {
-                        it2.next();
+                        stroke_b = it2.next();
                     }
                     Ordering::Equal => {
-                        it1.next();
-                        it2.next();
+                        stroke_a = it1.next();
+                        stroke_b = it2.next();
                     }
                 },
             };
@@ -156,8 +166,8 @@ impl Analyzer {
 
             let data = &self.data.strokes[*stroke];
             let ns = &data.nstroke;
-            let basefreqs: [i32; 2] = [
-                l.frequency(&self.corpus, ns, None) as i32,
+            let basefreqs: [u32; 2] = [
+                l.frequency(&self.corpus, ns, None),
                 match ns {
                     Nstroke::Monostroke(a) => {
                         corpus.chars[if *a == swap.a {
@@ -192,33 +202,31 @@ impl Analyzer {
                         });
                         corpus.trigrams[corpus.trigram_idx(a, b, c)]
                     }
-                } as i32,
+                },
             ];
-            let skipfreqs: [i32; 2] = match ns {
-                Nstroke::Bistroke(arr) => {
-                    [l.frequency(corpus, ns, Some(NgramType::Skipgram)) as i32, {
-                        let [a, b]: [usize; 2] = arr.map(|p| {
-                            if p == swap.a {
-                                c_b
-                            } else if p == swap.b {
-                                c_a
-                            } else {
-                                l.matrix[p]
-                            }
-                        });
-                        corpus.skipgrams[corpus.bigram_idx(a, b)] as i32
-                    }]
-                }
+            let skipfreqs: [u32; 2] = match ns {
+                Nstroke::Bistroke(arr) => [l.frequency(corpus, ns, Some(NgramType::Skipgram)), {
+                    let [a, b]: [usize; 2] = arr.map(|p| {
+                        if p == swap.a {
+                            c_b
+                        } else if p == swap.b {
+                            c_a
+                        } else {
+                            l.matrix[p]
+                        }
+                    });
+                    corpus.skipgrams[corpus.bigram_idx(a, b)]
+                }],
                 _ => [0, 0],
             };
 
             for amount in &data.amounts {
                 let diff: f32 = if let NgramType::Skipgram = self.data.metrics[amount.metric] {
-                    skipfreqs[1] - skipfreqs[0]
+                    Analyzer::diff_freqs(skipfreqs[1], skipfreqs[0])
                 } else {
-                    basefreqs[1] - basefreqs[0]
+                    Analyzer::diff_freqs(basefreqs[1], basefreqs[0])
                 } as f32;
-                // println!("{: >8}", diff);
+
                 let real_diff = amount.amount * diff;
                 diffs[amount.metric] += real_diff;
             }
