@@ -297,5 +297,26 @@ mod tests {
             qa_weight * qa_count as f32 + ws_weight * ws_count as f32,
             stats[0]
         );
+
+        // test swap_diff
+
+        let mut diffs = vec![0.0; stats.len()];
+
+        analyzer.swap_diff(&mut diffs, &layout, &Swap::new(0, 1)); // swap q and a
+        assert_eq!(-(qa_weight * qa_count as f32), diffs[0]);
+
+        for val in &mut diffs {
+            *val = 0.0;
+        }
+
+        analyzer.swap_diff(&mut diffs, &layout, &Swap::new(3, 5)); // swap w and x
+        assert_eq!(-(ws_weight * ws_count as f32), diffs[0]);
+
+        for val in &mut diffs {
+            *val = 0.0;
+        }
+
+        analyzer.swap_diff(&mut diffs, &layout, &Swap::new(9, 6));
+        assert_eq!(0.0, diffs[0], "swap not involving relevant keys should result in zero diff, but results in {}", diffs[0]);
     }
 }
