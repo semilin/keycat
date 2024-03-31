@@ -68,7 +68,7 @@ impl Optimizer for AnnealingOptimizer {
             let mut temp: f64 = 1.0;
             while temp >= 0.0 {
                 let swap = possible_swaps.choose(&mut rng).unwrap();
-                diffs = analyzer.swap_diff(diffs, l, swap);
+                analyzer.swap_diff(&mut diffs, l, swap);
                 let diff = scoring.score(&diffs);
                 if diff < 0.0 || rng.gen::<f64>() < temp {
                     l.swap(swap);
@@ -85,7 +85,7 @@ impl Optimizer for AnnealingOptimizer {
             .map(|l| {
                 (
                     l.clone(),
-                    scoring.score(&analyzer.calc_stats(vec![0.0; analyzer.data.metrics.len()], l)),
+                    scoring.score(&analyzer.calc_stats(l)),
                 )
             })
             .collect();

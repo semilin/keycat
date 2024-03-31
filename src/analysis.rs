@@ -98,7 +98,9 @@ impl Analyzer {
         Self { data, corpus }
     }
     #[must_use]
-    pub fn calc_stats(&self, mut stats: Vec<f32>, l: &Layout) -> Vec<f32> {
+    /// Calculates base statistics for a layout.
+    pub fn calc_stats(&self, l: &Layout) -> Vec<f32> {
+        let mut stats: Vec<f32> = vec![0.0; self.data.metrics.len()];
         for stroke in &self.data.strokes {
             let ns = &stroke.nstroke;
             let basefreq = l.frequency(&self.corpus, ns, None);
@@ -119,9 +121,9 @@ impl Analyzer {
         stats
     }
 
-    /// Calculates the diff for a `Swap`.
-    #[must_use]
-    pub fn swap_diff(&self, mut diffs: Vec<f32>, l: &Layout, swap: &Swap) -> Vec<f32> {
+    /// Calculates the difference in stats between two layout states,
+    /// the original and the state after the `Swap` is applied.
+    pub fn swap_diff(&self, diffs: &mut[f32], l: &Layout, swap: &Swap) {
         let corpus = &self.corpus;
         let c_a = l.matrix[swap.a];
         let c_b = l.matrix[swap.b];
@@ -231,6 +233,16 @@ impl Analyzer {
                 diffs[amount.metric] += real_diff;
             }
         }
-        diffs
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_diff_freqs() {
+        assert_eq!(5, Analyzer::diff_freqs(30, 25));
+        assert_eq!(-2, Analyzer::diff_freqs(10, 12));
+        assert_eq!(0, Analyzer::diff_freqs(5, 5));
     }
 }

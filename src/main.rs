@@ -82,7 +82,6 @@ pub fn main() {
         );
     }
 
-    let mut stats = vec![0.0; analyzer.data.metrics.len()];
-    stats = analyzer.calc_stats(stats, &layout);
+    let stats = analyzer.calc_stats(&layout);
     println!("{stats:?}");
 }
