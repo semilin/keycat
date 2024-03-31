@@ -3,6 +3,7 @@ use keycat::{
     Corpus, Layout, NgramType, Nstroke,
 };
 
+#[cfg(feature = "opt")]
 use keycat::opt::{AnnealingOptimizer, Optimizer, Scoring};
 
 pub fn main() {
@@ -22,7 +23,7 @@ pub fn main() {
 
     // println!("{:?}", corpus.char_list);
 
-    corpus.add_file("./tr.txt").unwrap();
+    corpus.add_file("./mr.txt").unwrap();
 
     // for (i, v) in corpus.bigrams.iter().enumerate() {
     //     if *v >= 533 {
@@ -69,16 +70,19 @@ pub fn main() {
     );
     println!("{:?}", analyzer.data.position_strokes);
 
-    let mut optimizer = AnnealingOptimizer::new(100, -0.001).pin(vec![0]);
-    optimizer.setup(layout.clone());
-    optimizer.run(
-        &analyzer,
-        &Scoring {
-            weights: vec![(0, 1.0)],
-        },
-    );
+    #[cfg(feature = "opt")]
+    {
+        let mut optimizer = AnnealingOptimizer::new(100, -0.001).pin(vec![0]);
+        optimizer.setup(layout.clone());
+        optimizer.run(
+            &analyzer,
+            &Scoring {
+                weights: vec![(0, 1.0)],
+            },
+        );
+    }
 
     let mut stats = vec![0.0; analyzer.data.metrics.len()];
     stats = analyzer.calc_stats(stats, &layout);
-    println!("{:?}", stats);
+    println!("{stats:?}");
 }
