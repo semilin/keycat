@@ -82,12 +82,7 @@ impl Optimizer for AnnealingOptimizer {
         let mut layouts: Vec<(Layout, f32)> = self
             .layouts
             .par_iter()
-            .map(|l| {
-                (
-                    l.clone(),
-                    scoring.score(&analyzer.calc_stats(l)),
-                )
-            })
+            .map(|l| (l.clone(), scoring.score(&analyzer.calc_stats(l))))
             .collect();
         layouts.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
         layouts

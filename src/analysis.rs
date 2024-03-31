@@ -123,7 +123,7 @@ impl Analyzer {
 
     /// Calculates the difference in stats between two layout states,
     /// the original and the state after the `Swap` is applied.
-    pub fn swap_diff(&self, diffs: &mut[f32], l: &Layout, swap: &Swap) {
+    pub fn swap_diff(&self, diffs: &mut [f32], l: &Layout, swap: &Swap) {
         let corpus = &self.corpus;
         let c_a = l.matrix[swap.a];
         let c_b = l.matrix[swap.b];
@@ -239,10 +239,63 @@ impl Analyzer {
 #[cfg(test)]
 mod tests {
     use super::*;
+    fn setup_corpus() -> Corpus {
+        Corpus::with_char_list(
+            "abcdefghijklmnopqrstuvwxyz,./;"
+                .chars()
+                .map(|c| vec![c])
+                .collect(),
+        )
+    }
+    fn setup_qwerty(corpus: &Corpus) -> Layout {
+        Layout {
+            matrix: "qazwsxedcrfvtgbyhnujmik,lo.p;/" // QWERTY
+                .chars()
+                .map(|c| corpus.corpus_char(c))
+                .collect(),
+        }
+    }
     #[test]
     fn test_diff_freqs() {
         assert_eq!(5, Analyzer::diff_freqs(30, 25));
         assert_eq!(-2, Analyzer::diff_freqs(10, 12));
         assert_eq!(0, Analyzer::diff_freqs(5, 5));
+    }
+    #[test]
+    fn test_calc_stats() {
+        let mut corpus = setup_corpus();
+        let layout = setup_qwerty(&corpus);
+
+        // static random numbers because I'm too lazy to make a more thorough test right now
+        let qa_count = 54321;
+        let ws_count = 203;
+        let qa_weight = 12.0;
+        let ws_weight = 3.6;
+        for _ in 0..qa_count {
+            corpus.add_str("qa");
+        }
+        for _ in 0..ws_count {
+            corpus.add_str("ws");
+        }
+
+        let metrics = vec![NgramType::Bigram];
+        let strokes = vec![
+            NstrokeData::new(
+                Nstroke::Bistroke([0, 1]),
+                vec![MetricAmount::new(0, qa_weight)],
+            ), // qa
+            NstrokeData::new(
+                Nstroke::Bistroke([3, 4]),
+                vec![MetricAmount::new(0, ws_weight)],
+            ), // ws
+        ];
+        let data = MetricData::from(metrics, strokes, 30);
+        let analyzer = Analyzer::from(data, corpus);
+        let stats = analyzer.calc_stats(&layout);
+
+        assert_eq!(
+            qa_weight * qa_count as f32 + ws_weight * ws_count as f32,
+            stats[0]
+        );
     }
 }
