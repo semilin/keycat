@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 use std::path::Path;
+use crate::Layout;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -157,6 +158,11 @@ impl Corpus {
         let lines = BufReader::new(file).lines();
         lines.map_while(Result::ok).for_each(|l| self.add_str(&l));
         Ok(())
+    }
+    pub fn layout_from_str(&self, s: &str) -> Layout {
+        Layout {
+            matrix: s.chars().map(|c| self.corpus_char(c)).collect(),
+        }
     }
 }
 
