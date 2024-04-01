@@ -317,6 +317,10 @@ mod tests {
         }
 
         analyzer.swap_diff(&mut diffs, &layout, &Swap::new(9, 6));
-        assert_eq!(0.0, diffs[0], "swap not involving relevant keys should result in zero diff, but results in {}", diffs[0]);
+        assert_eq!(
+            0.0, diffs[0],
+            "swap not involving relevant keys should result in zero diff, but results in {}",
+            diffs[0]
+        );
     }
 }

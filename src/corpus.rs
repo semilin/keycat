@@ -104,6 +104,18 @@ impl Corpus {
         *self.char_map.get(&c).unwrap_or(&0)
     }
     #[must_use]
+    pub fn corpus_bigram(&self, chars: &[char; 2]) -> CorpusIndex {
+        self.bigram_idx(self.corpus_char(chars[0]), self.corpus_char(chars[1]))
+    }
+    #[must_use]
+    pub fn corpus_trigram(&self, chars: &[char; 3]) -> CorpusIndex {
+        self.trigram_idx(
+            self.corpus_char(chars[0]),
+            self.corpus_char(chars[1]),
+            self.corpus_char(chars[2]),
+        )
+    }
+    #[must_use]
     pub fn bigram_idx(&self, c1: CorpusChar, c2: CorpusChar) -> CorpusIndex {
         let len = self.char_list.len();
         (c1 * len) + c2
@@ -133,6 +145,9 @@ impl Corpus {
                         let sg = self.bigram_idx(*c1, *c3);
                         self.skipgrams[sg] += 1;
                     }
+                } else if let Some(c1) = trigram[0] {
+                    let sg = self.bigram_idx(*c1, *c3);
+                    self.skipgrams[sg] += 1;
                 }
             }
         }
@@ -142,5 +157,35 @@ impl Corpus {
         let lines = BufReader::new(file).lines();
         lines.map_while(Result::ok).for_each(|l| self.add_str(&l));
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_corpus() {
+        let mut corpus = Corpus::with_char_list(
+            "abcdefghijklmnopqrstuvwxyz"
+                .chars()
+                .map(|c| vec![c])
+                .collect(),
+        );
+        corpus.add_str("the quick brown fox jumps over the lazy dog");
+
+        assert_eq!(corpus.trigrams[corpus.corpus_trigram(&['t', 'h', 'e'])], 2);
+        assert_eq!(corpus.trigrams[corpus.corpus_trigram(&['q', 'u', 'i'])], 1);
+        assert_eq!(corpus.trigrams[corpus.corpus_trigram(&['z', 'y', ' '])], 0);
+        assert_eq!(corpus.trigrams[corpus.corpus_trigram(&['a', 'b', 'c'])], 0);
+        assert_eq!(corpus.bigrams[corpus.corpus_bigram(&['t', 'h'])], 2);
+        assert_eq!(corpus.bigrams[corpus.corpus_bigram(&['v', 'e'])], 1);
+        assert_eq!(corpus.skipgrams[corpus.corpus_bigram(&['v', 'e'])], 0);
+        assert_eq!(corpus.skipgrams[corpus.corpus_bigram(&['f', 'x'])], 1);
+        assert_eq!(corpus.skipgrams[corpus.corpus_bigram(&['t', 'e'])], 2);
+        assert_eq!(
+            corpus.skipgrams[corpus.corpus_bigram(&['e', 'l'])],
+            1,
+            "skipgrams should be counted across invalid characters"
+        );
     }
 }
