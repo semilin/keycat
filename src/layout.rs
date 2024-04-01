@@ -82,3 +82,56 @@ impl Swap {
         Self { a, b }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_layout() {
+        let mut corpus = Corpus::with_char_list(
+            "abcdefghijklmnopqrstuvwxyz,./;"
+                .chars()
+                .map(|c| vec![c])
+                .collect(),
+        );
+
+        let text = "the quick brown fox jumps over the lazy dog";
+        corpus.add_str(&text);
+
+        let mut qwerty = corpus.layout_from_str("qazwsxedcrfvtgbyhnujmik,lo.p;/");
+
+        assert_eq!(
+            1,
+            qwerty.frequency(&corpus, &Nstroke::Monostroke(0), None),
+            "q occurs once"
+        );
+        assert_eq!(
+            3,
+            qwerty.frequency(&corpus, &Nstroke::Monostroke(6), None),
+            "e occurs 3 times"
+        );
+
+        assert_eq!(
+            2,
+            qwerty.frequency(&corpus, &Nstroke::Bistroke([12, 16]), None),
+            "th occurs twice"
+        );
+
+        assert_eq!(
+            2,
+            qwerty.frequency(&corpus, &Nstroke::Tristroke([12, 16, 6]), None),
+            "the occurs twice"
+        );
+
+        assert_eq!(corpus.corpus_char('q'), qwerty.matrix[0]);
+        assert_eq!(corpus.corpus_char('a'), qwerty.matrix[1]);
+        qwerty.swap(&Swap::new(0, 1));
+        assert_eq!(corpus.corpus_char('a'), qwerty.matrix[0]);
+        assert_eq!(corpus.corpus_char('q'), qwerty.matrix[1]);
+
+        assert_eq!(
+            text.chars().filter(|c| *c != ' ').collect::<Vec<_>>().len() as u32,
+            qwerty.total_char_count(&corpus)
+        );
+    }
+}

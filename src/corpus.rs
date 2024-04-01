@@ -1,8 +1,8 @@
+use crate::Layout;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 use std::path::Path;
-use crate::Layout;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
