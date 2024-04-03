@@ -7,7 +7,10 @@ use std::path::Path;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
+/// Represents an index in a `Corpus` for bigrams, skipgrams, and
+/// trigrams.
 pub type CorpusIndex = usize;
+/// Represents a character in the `Corpus`.
 pub type CorpusChar = CorpusIndex;
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -31,6 +34,10 @@ pub struct Corpus {
 }
 
 impl Corpus {
+    /// Produces a new `Corpus` with the specified list of
+    /// characters. Any characters that are not in the list will be
+    /// ignored when counting frequencies.
+
     /// ```rust
     /// use keycat::Corpus;
     /// let mut corpus = Corpus::with_char_list(
@@ -153,12 +160,15 @@ impl Corpus {
             }
         }
     }
+    /// Reads a file line by line and adds the ngrams from each line
+    /// to the `Corpus` totals.
     pub fn add_file<P: AsRef<Path>>(&mut self, path: P) -> io::Result<()> {
         let file = File::open(path)?;
         let lines = BufReader::new(file).lines();
         lines.map_while(Result::ok).for_each(|l| self.add_str(&l));
         Ok(())
     }
+    #[must_use]
     pub fn layout_from_str(&self, s: &str) -> Layout {
         Layout {
             matrix: s.chars().map(|c| self.corpus_char(c)).collect(),
