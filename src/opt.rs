@@ -32,9 +32,20 @@ impl Objective for WeightsObjective {
     fn score(&self, stats: &[f32]) -> f32 {
         self.weights
             .iter()
-            .fold(0.0, |acc, Weight { metric, weight}| {
+            .fold(0.0, |acc, Weight { metric, weight }| {
                 acc + (weight * stats[*metric])
             })
+    }
+}
+
+pub struct AnonymousObjective {
+    pub function: fn(&[f32]) -> f32,
+}
+
+impl Objective for AnonymousObjective {
+    #[must_use]
+    fn score(&self, stats: &[f32]) -> f32 {
+        (self.function)(stats)
     }
 }
 
@@ -170,6 +181,9 @@ mod tests {
         optimizer.setup(qwerty.clone());
         let optimized = optimizer.run(&analyzer, &objective);
         let end = &optimized[0].1;
-        assert!(*end < start, "optimized should be lower score than unoptimized");
+        assert!(
+            *end < start,
+            "optimized should be lower score than unoptimized"
+        );
     }
 }
