@@ -65,9 +65,14 @@ impl Optimizer for AnnealingOptimizer {
                 .flat_map(|a| (0..l.matrix.len()).map(move |b| Swap::new(a, b)))
                 .filter(|swap| !self.pins.iter().any(|p| *p == swap.a || *p == swap.b))
                 .collect();
+            if possible_swaps.is_empty() {
+                return;
+            }
             let mut temp: f64 = 1.0;
             while temp >= 0.0 {
-                let swap = possible_swaps.choose(&mut rng).unwrap();
+                let swap = possible_swaps
+                    .choose(&mut rng)
+                    .expect("possible_swaps should not be empty");
                 analyzer.swap_diff(&mut diffs, l, swap);
                 let diff = scoring.score(&diffs);
                 if diff < 0.0 || rng.gen::<f64>() < temp {
@@ -84,7 +89,7 @@ impl Optimizer for AnnealingOptimizer {
             .par_iter()
             .map(|l| (l.clone(), scoring.score(&analyzer.calc_stats(l))))
             .collect();
-        layouts.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+        layouts.sort_by(|a, b| a.1.partial_cmp(&b.1).expect("score should never be NaN"));
         layouts
     }
 }
