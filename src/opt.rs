@@ -173,7 +173,7 @@ mod tests {
         }
         let data = MetricData::from(metrics, strokes, 30);
         let analyzer = Analyzer::from(data, corpus);
-        let mut optimizer = AnnealingOptimizer::new(32, 1000000).pin(vec![0]);
+        let mut optimizer = AnnealingOptimizer::new(4, 1000).pin(vec![0]);
         let objective = WeightsObjective::new(vec![Weight {
             metric: 0,
             weight: 1.0,
