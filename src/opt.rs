@@ -69,18 +69,18 @@ pub struct AnnealingOptimizer {
     pins: Vec<usize>,
     /// The number of layouts to be optimized in parallel.
     pub population_size: usize,
-    /// The amount the temperature should decrease per step.
-    pub temp_decrement: f64,
+    /// The number of iterations, i.e. swaps to make before finishing.
+    pub iterations: u64,
 }
 
 impl AnnealingOptimizer {
     #[must_use]
-    pub fn new(population_size: usize, temp_decrement: f64) -> Self {
+    pub fn new(population_size: usize, iterations: u64) -> Self {
         Self {
             layouts: Vec::with_capacity(population_size),
             pins: vec![],
             population_size,
-            temp_decrement,
+            iterations,
         }
     }
 }
@@ -100,6 +100,7 @@ impl Optimizer for AnnealingOptimizer {
         analyzer: &Analyzer,
         objective: &(dyn Objective + Send + Sync),
     ) -> Vec<(Layout, f32)> {
+        let temperature_decrement = -(1.0 / self.iterations as f64);
         self.layouts.par_iter_mut().for_each(|l| {
             let mut diffs = vec![0.0; analyzer.data.metrics.len()];
             let mut rng = rand::thread_rng();
@@ -123,7 +124,7 @@ impl Optimizer for AnnealingOptimizer {
                 for val in &mut diffs {
                     *val = 0.0;
                 }
-                temp += self.temp_decrement;
+                temp += temperature_decrement;
             }
         });
         let mut layouts: Vec<(Layout, f32)> = self
@@ -172,7 +173,7 @@ mod tests {
         }
         let data = MetricData::from(metrics, strokes, 30);
         let analyzer = Analyzer::from(data, corpus);
-        let mut optimizer = AnnealingOptimizer::new(8, -0.01).pin(vec![0]);
+        let mut optimizer = AnnealingOptimizer::new(32, 1000000).pin(vec![0]);
         let objective = WeightsObjective::new(vec![Weight {
             metric: 0,
             weight: 1.0,
