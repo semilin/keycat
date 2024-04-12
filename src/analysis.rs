@@ -101,6 +101,11 @@ impl Analyzer {
     /// Calculates base statistics for a layout.
     pub fn calc_stats(&self, l: &Layout) -> Vec<f32> {
         let mut stats: Vec<f32> = vec![0.0; self.data.metrics.len()];
+        self.recalc_stats(&mut stats, l);
+        stats
+    }
+
+    pub fn recalc_stats(&self, stats: &mut [f32], l: &Layout) {
         for stroke in &self.data.strokes {
             let ns = &stroke.nstroke;
             let basefreq = l.frequency(&self.corpus, ns, None);
@@ -118,7 +123,6 @@ impl Analyzer {
                 stats[amount.metric] += freq as f32 * amount.amount;
             }
         }
-        stats
     }
 
     /// Calculates the difference in stats between two layout states,
