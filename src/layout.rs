@@ -46,6 +46,30 @@ impl Layout {
     pub fn total_char_count(&self, corpus: &Corpus) -> u32 {
         self.matrix.iter().map(|c| corpus.chars[*c]).sum()
     }
+    fn bi_count(&self, corpus: &Corpus, frequencies: &[u32]) -> u32 {
+        self.matrix
+            .iter()
+            .flat_map(|a| (self.matrix.iter().map(move |b| (a, b))))
+            .map(|(a, b)| frequencies[corpus.bigram_idx(*a, *b)])
+            .sum()
+    }
+    #[must_use]
+    pub fn total_bigram_count(&self, corpus: &Corpus) -> u32 {
+        self.bi_count(corpus, &corpus.bigrams)
+    }
+    #[must_use]
+    pub fn total_skipgram_count(&self, corpus: &Corpus) -> u32 {
+        self.bi_count(corpus, &corpus.skipgrams)
+    }
+    #[must_use]
+    pub fn total_trigram_count(&self, corpus: &Corpus) -> u32 {
+        self.matrix
+            .iter()
+            .flat_map(|a| (self.matrix.iter().map(move |b| (a, b))))
+            .flat_map(|(a, b)| (self.matrix.iter().map(move |c| (a, b, c))))
+            .map(|(a, b, c)| corpus.trigrams[corpus.trigram_idx(*a, *b, *c)])
+            .sum()
+    }
     pub fn swap(&mut self, s: &Swap) {
         self.matrix.swap(s.a, s.b);
     }
