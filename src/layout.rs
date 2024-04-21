@@ -116,6 +116,7 @@ impl Swap {
     }
 }
 
+#[derive(Debug)]
 pub struct LayoutTotals {
     chars: u32,
     bigrams: u32,
