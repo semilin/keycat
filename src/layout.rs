@@ -70,6 +70,15 @@ impl Layout {
             .map(|(a, b, c)| corpus.trigrams[corpus.trigram_idx(*a, *b, *c)])
             .sum()
     }
+    #[must_use]
+    pub fn totals(&self, corpus: &Corpus) -> LayoutTotals {
+	LayoutTotals {
+            chars: self.total_char_count(&corpus),
+            bigrams: self.total_bigram_count(&corpus),
+            skipgrams: self.total_skipgram_count(&corpus),
+            trigrams: self.total_trigram_count(&corpus),
+        }
+    }
     pub fn swap(&mut self, s: &Swap) {
         self.matrix.swap(s.a, s.b);
     }
@@ -104,6 +113,25 @@ impl Swap {
     #[must_use]
     pub fn new(a: usize, b: usize) -> Self {
         Self { a, b }
+    }
+}
+
+pub struct LayoutTotals {
+    chars: u32,
+    bigrams: u32,
+    skipgrams: u32,
+    trigrams: u32,
+}
+
+impl LayoutTotals {
+    pub fn percentage(&self, freq: f32, kind: NgramType) -> f32 {
+        let denom = match kind {
+            NgramType::Monogram => self.chars,
+            NgramType::Bigram => self.bigrams,
+            NgramType::Skipgram => self.skipgrams,
+            NgramType::Trigram => self.trigrams,
+        } as f32;
+        100. * freq / denom
     }
 }
 
