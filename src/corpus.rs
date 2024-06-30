@@ -170,9 +170,7 @@ impl Corpus {
     }
     #[must_use]
     pub fn layout_from_str(&self, s: &str) -> Layout {
-        Layout {
-            matrix: s.chars().map(|c| self.corpus_char(c)).collect(),
-        }
+        Layout(s.chars().map(|c| self.corpus_char(c)).collect())
     }
 }
 

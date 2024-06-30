@@ -129,8 +129,8 @@ impl Analyzer {
     /// the original and the state after the `Swap` is applied.
     pub fn swap_diff(&self, diffs: &mut [f32], l: &Layout, swap: &Swap) {
         let corpus = &self.corpus;
-        let c_a = l.matrix[swap.a];
-        let c_b = l.matrix[swap.b];
+        let c_a = l.0[swap.a];
+        let c_b = l.0[swap.b];
         let it1 = &mut self.data.position_strokes[swap.a].iter();
         let it2 = &mut self.data.position_strokes[swap.b].iter();
         let mut stroke_a = None;
@@ -181,7 +181,7 @@ impl Analyzer {
                         } else if *a == swap.b {
                             c_a
                         } else {
-                            l.matrix[*a]
+                            l.0[*a]
                         }]
                     }
                     Nstroke::Bistroke(arr) => {
@@ -191,7 +191,7 @@ impl Analyzer {
                             } else if p == swap.b {
                                 c_a
                             } else {
-                                l.matrix[p]
+                                l.0[p]
                             }
                         });
                         corpus.bigrams[corpus.bigram_idx(a, b)]
@@ -203,7 +203,7 @@ impl Analyzer {
                             } else if p == swap.b {
                                 c_a
                             } else {
-                                l.matrix[p]
+                                l.0[p]
                             }
                         });
                         corpus.trigrams[corpus.trigram_idx(a, b, c)]
@@ -218,7 +218,7 @@ impl Analyzer {
                         } else if p == swap.b {
                             c_a
                         } else {
-                            l.matrix[p]
+                            l.0[p]
                         }
                     });
                     corpus.skipgrams[corpus.bigram_idx(a, b)]
@@ -252,12 +252,12 @@ mod tests {
         )
     }
     fn setup_qwerty(corpus: &Corpus) -> Layout {
-        Layout {
-            matrix: "qazwsxedcrfvtgbyhnujmik,lo.p;/" // QWERTY
+        Layout(
+            "qazwsxedcrfvtgbyhnujmik,lo.p;/" // QWERTY
                 .chars()
                 .map(|c| corpus.corpus_char(c))
                 .collect(),
-        }
+        )
     }
     #[test]
     fn test_diff_freqs() {

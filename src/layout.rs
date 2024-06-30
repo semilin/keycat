@@ -4,52 +4,45 @@ use serde::{Deserialize, Serialize};
 
 pub type Pos = usize;
 
-/// Flat keyboard layout structure.
+/// Flat keyboard layout structure. The actual details of each
+/// position is irrelevant to Keycat, so it doesn't need to be more
+/// complicated than just a list of CorpusChars.
 #[derive(Clone)]
-pub struct Layout {
-    /// The actual details of each position is irrelevant to Keycat,
-    /// so it doesn't need to be more complicated than just a list of
-    /// CorpusChars.
-    pub matrix: Vec<CorpusChar>,
-}
+pub struct Layout(pub Vec<CorpusChar>);
 
 impl Layout {
     #[must_use]
     pub fn nstroke_chars(&self, ns: &Nstroke) -> Vec<CorpusChar> {
         match ns {
-            Nstroke::Monostroke(idx) => vec![self.matrix[*idx]],
-            Nstroke::Bistroke(idx) => idx.iter().map(|p| self.matrix[*p]).collect(),
-            Nstroke::Tristroke(idx) => idx.iter().map(|p| self.matrix[*p]).collect(),
+            Nstroke::Monostroke(idx) => vec![self.0[*idx]],
+            Nstroke::Bistroke(idx) => idx.iter().map(|p| self.0[*p]).collect(),
+            Nstroke::Tristroke(idx) => idx.iter().map(|p| self.0[*p]).collect(),
         }
     }
     #[must_use]
     pub fn frequency(&self, corpus: &Corpus, ns: &Nstroke, ng: Option<NgramType>) -> u32 {
         match ns {
-            Nstroke::Monostroke(idx) => corpus.chars[self.matrix[*idx]],
+            Nstroke::Monostroke(idx) => corpus.chars[self.0[*idx]],
             Nstroke::Bistroke(idx) => {
-                let idx = corpus.bigram_idx(self.matrix[idx[0]], self.matrix[idx[1]]);
+                let idx = corpus.bigram_idx(self.0[idx[0]], self.0[idx[1]]);
                 match ng {
                     Some(NgramType::Skipgram) => corpus.skipgrams[idx],
                     _ => corpus.bigrams[idx],
                 }
             }
             Nstroke::Tristroke(idx) => {
-                corpus.trigrams[corpus.trigram_idx(
-                    self.matrix[idx[0]],
-                    self.matrix[idx[1]],
-                    self.matrix[idx[2]],
-                )]
+                corpus.trigrams[corpus.trigram_idx(self.0[idx[0]], self.0[idx[1]], self.0[idx[2]])]
             }
         }
     }
     #[must_use]
     pub fn total_char_count(&self, corpus: &Corpus) -> u32 {
-        self.matrix.iter().map(|c| corpus.chars[*c]).sum()
+        self.0.iter().map(|c| corpus.chars[*c]).sum()
     }
     fn bi_count(&self, corpus: &Corpus, frequencies: &[u32]) -> u32 {
-        self.matrix
+        self.0
             .iter()
-            .flat_map(|a| (self.matrix.iter().map(move |b| (a, b))))
+            .flat_map(|a| (self.0.iter().map(move |b| (a, b))))
             .map(|(a, b)| frequencies[corpus.bigram_idx(*a, *b)])
             .sum()
     }
@@ -63,16 +56,16 @@ impl Layout {
     }
     #[must_use]
     pub fn total_trigram_count(&self, corpus: &Corpus) -> u32 {
-        self.matrix
+        self.0
             .iter()
-            .flat_map(|a| (self.matrix.iter().map(move |b| (a, b))))
-            .flat_map(|(a, b)| (self.matrix.iter().map(move |c| (a, b, c))))
+            .flat_map(|a| (self.0.iter().map(move |b| (a, b))))
+            .flat_map(|(a, b)| (self.0.iter().map(move |c| (a, b, c))))
             .map(|(a, b, c)| corpus.trigrams[corpus.trigram_idx(*a, *b, *c)])
             .sum()
     }
     #[must_use]
     pub fn totals(&self, corpus: &Corpus) -> LayoutTotals {
-	LayoutTotals {
+        LayoutTotals {
             chars: self.total_char_count(&corpus),
             bigrams: self.total_bigram_count(&corpus),
             skipgrams: self.total_skipgram_count(&corpus),
@@ -80,7 +73,7 @@ impl Layout {
         }
     }
     pub fn swap(&mut self, s: &Swap) {
-        self.matrix.swap(s.a, s.b);
+        self.0.swap(s.a, s.b);
     }
 }
 
@@ -176,11 +169,11 @@ mod tests {
             "the occurs twice"
         );
 
-        assert_eq!(corpus.corpus_char('q'), qwerty.matrix[0]);
-        assert_eq!(corpus.corpus_char('a'), qwerty.matrix[1]);
+        assert_eq!(corpus.corpus_char('q'), qwerty.0[0]);
+        assert_eq!(corpus.corpus_char('a'), qwerty.0[1]);
         qwerty.swap(&Swap::new(0, 1));
-        assert_eq!(corpus.corpus_char('a'), qwerty.matrix[0]);
-        assert_eq!(corpus.corpus_char('q'), qwerty.matrix[1]);
+        assert_eq!(corpus.corpus_char('a'), qwerty.0[0]);
+        assert_eq!(corpus.corpus_char('q'), qwerty.0[1]);
 
         assert_eq!(
             text.chars().filter(|c| *c != ' ').collect::<Vec<_>>().len() as u32,
