@@ -78,7 +78,7 @@ impl Layout {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(untagged))]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Nstroke {
     Monostroke(usize),
     Bistroke([usize; 2]),

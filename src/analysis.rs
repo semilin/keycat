@@ -8,7 +8,7 @@ pub type MetricIndex = usize;
 pub type NstrokeIndex = usize;
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MetricAmount {
     #[cfg_attr(feature = "serde", serde(rename = "met"))]
     pub metric: MetricIndex,
@@ -24,7 +24,7 @@ impl MetricAmount {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct NstrokeData {
     #[cfg_attr(feature = "serde", serde(rename = "ns"))]
     pub nstroke: Nstroke,
